@@ -1,0 +1,19 @@
+{
+  "dashboard": "Dashboard",
+  "agenda": "Calendar",
+  "ordens": "Work Orders",
+  "clientes": "Customers",
+  "veiculos": "Vehicles",
+  "servicos": "Services",
+  "estoque": "Inventory",
+  "financeiro": "Financial",
+  "relatorios": "Reports",
+  "usuarios": "Users",
+  "configuracoes": "Settings",
+  "addons": {
+    "gps": "Autotrack",
+    "pontos": "Loyalty"
+  },
+  "logout": "Sign out",
+  "welcome": "Welcome, {name}"
+}

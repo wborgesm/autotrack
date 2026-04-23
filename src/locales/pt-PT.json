@@ -1,0 +1,19 @@
+{
+  "dashboard": "Painel",
+  "agenda": "Agenda",
+  "ordens": "Ordens",
+  "clientes": "Clientes",
+  "veiculos": "Veículos",
+  "servicos": "Serviços",
+  "estoque": "Stock",
+  "financeiro": "Financeiro",
+  "relatorios": "Relatórios",
+  "usuarios": "Utilizadores",
+  "configuracoes": "Configurações",
+  "addons": {
+    "gps": "Autotrack",
+    "pontos": "Fidelidade"
+  },
+  "logout": "Sair",
+  "welcome": "Bem-vindo, {name}"
+}

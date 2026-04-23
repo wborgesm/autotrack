@@ -1,0 +1,594 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plano {
+  STARTER
+  PROFISSIONAL
+  BUSINESS
+  ENTERPRISE
+}
+
+enum NivelAcesso {
+  SUPER_ADMIN
+  ADMIN
+  GERENTE
+  TECNICO
+  RECEPCIONISTA
+  CLIENTE
+}
+
+enum TipoVeiculo {
+  CARRO
+  MOTO
+  UTILITARIO
+  CAMINHAO
+}
+
+enum StatusOrdem {
+  ABERTA
+  EM_DIAGNOSTICO
+  AGUARDANDO_PECAS
+  EM_SERVICO
+  TESTE_FINAL
+  PRONTA
+  ENTREGUE
+  CANCELADA
+}
+
+enum StatusAgendamento {
+  PENDENTE
+  CONFIRMADO
+  CANCELADO
+  CONCLUIDO
+  NAO_COMPARECEU
+}
+
+enum TipoMovimentoEstoque {
+  ENTRADA
+  SAIDA
+  AJUSTE
+}
+
+enum TipoLancamento {
+  RECEITA
+  DESPESA
+}
+
+enum TipoTransacaoPontos {
+  CREDITO
+  DEBITO
+  EXPIRACAO
+}
+
+enum NivelFidelidade {
+  BRONZE
+  PRATA
+  OURO
+  PLATINA
+}
+
+enum UnidadeMedida {
+  UN
+  L
+  ML
+  KG
+  G
+  M
+  PAR
+  JG
+}
+
+model Tenant {
+  id                String        @id @default(cuid())
+  nome              String
+  cnpj              String?
+  telefone          String?
+  email             String?
+  endereco          String?
+  logo              String?
+  plano             Plano         @default(STARTER)
+  ativo             Boolean       @default(true)
+
+  addonGps          Boolean       @default(false)
+  addonPontos       Boolean       @default(false)
+  addonWhatsapp     Boolean       @default(false)
+  addonPortalCliente Boolean      @default(false)
+
+  traccarUrl        String?
+  traccarPort       Int?
+  traccarUser       String?
+  traccarPass       String?
+
+  pontosPorReal     Int           @default(10)
+  bonusMoto         Int           @default(15)
+  minimoResgate     Int           @default(500)
+  validadeMeses     Int           @default(12)
+
+  usuarios          Usuario[]
+  clientes          Cliente[]
+  veiculos          Veiculo[]
+  tecnicos          Tecnico[]
+  servicos          Servico[]
+  pecas             Peca[]
+  movimentosEstoque MovimentoEstoque[]
+  agendamentos      Agendamento[]
+  ordensServico     OrdemServico[]
+  lancamentos       LancamentoFinanceiro[]
+  auditLogs        AuditLog[]
+  traccarServers    TraccarServer[]
+  orcamentos        Orcamento[]
+  faturas           Fatura[]
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("tenants")
+}
+
+model Usuario {
+  id          String      @id @default(cuid())
+  tenantId    String
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  nome        String
+  email       String
+  senha       String
+  nivel       NivelAcesso @default(CLIENTE)
+  ativo       Boolean     @default(true)
+  avatar      String?
+
+  agendamentos Agendamento[]
+  ordensServico OrdemServico[]
+  tecnico      Tecnico?
+  traccarServers TraccarServer[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([tenantId, email])
+  @@map("usuarios")
+}
+
+model Cliente {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  nome        String
+  cpf         String?
+  telefone    String?
+  email       String?
+  endereco    String?
+  observacoes String?
+  ativo       Boolean  @default(true)
+
+  veiculos          Veiculo[]
+  ordens            OrdemServico[]
+  agendamentos      Agendamento[]
+  pontosFidelidade  PontosFidelidade?
+  orcamentos        Orcamento[]
+  faturas           Fatura[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, cpf])
+  @@map("clientes")
+}
+
+model Veiculo {
+  id          String      @id @default(cuid())
+  tenantId    String
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clienteId   String
+  cliente     Cliente     @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  tipo        TipoVeiculo
+  placa       String
+  matricula   String?
+  marca       String
+  modelo      String
+  ano         Int?
+  cor         String?
+  combustivel String?
+  km          Int?
+  chassi      String?
+  observacoes String?
+  ativo       Boolean     @default(true)
+
+  imeiGps              String?
+  dispositivoTraccarId Int?
+
+  ordens        OrdemServico[]
+  agendamentos  Agendamento[]
+  orcamentos    Orcamento[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, placa])
+  @@map("veiculos")
+}
+
+model Tecnico {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  usuarioId   String?  @unique
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+
+  nome          String
+  especialidade String?
+  telefone      String?
+  ativo         Boolean @default(true)
+
+  ordens        OrdemServico[]
+  agendamentos  Agendamento[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("tecnicos")
+}
+
+model Servico {
+  id          String      @id @default(cuid())
+  tenantId    String
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  nome          String
+  descricao     String?
+  tipoVeiculo   TipoVeiculo?
+  tempoEstMin   Int?
+  precoMaoObra  Decimal     @db.Decimal(10,2)
+  ativo         Boolean     @default(true)
+
+  itensOrdem    ItemOrdem[]
+  agendamentos  Agendamento[]
+  orcamentoItens OrcamentoItem[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("servicos")
+}
+
+model Peca {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  codigo      String
+  codigoBarras String?
+  nome        String
+  descricao   String?
+  categoria   String?
+  unidade     UnidadeMedida @default(UN)
+  qtdEstoque  Decimal       @default(0) @db.Decimal(10,2)
+  qtdMinima   Decimal       @default(0) @db.Decimal(10,2)
+  custoPadrao Decimal?      @db.Decimal(10,2)
+  precoVenda  Decimal?      @db.Decimal(10,2)
+  margemLucro Decimal?      @db.Decimal(5,2)
+  imagem      String?
+  ativo       Boolean       @default(true)
+
+  movimentos  MovimentoEstoque[]
+  itensPeca   ItemPecaOrdem[]
+  orcamentoItens OrcamentoItem[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, codigo])
+  @@map("pecas")
+}
+
+model MovimentoEstoque {
+  id          String              @id @default(cuid())
+  tenantId    String
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pecaId      String
+  peca        Peca                @relation(fields: [pecaId], references: [id])
+
+  tipo        TipoMovimentoEstoque
+  quantidade  Decimal             @db.Decimal(10,2)
+  custo       Decimal?            @db.Decimal(10,2)
+  ordemId     String?
+  ordem       OrdemServico?       @relation(fields: [ordemId], references: [id])
+  observacoes String?
+
+  createdAt   DateTime @default(now())
+
+  @@map("movimentos_estoque")
+}
+
+model Agendamento {
+  id          String           @id @default(cuid())
+  tenantId    String
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  clienteId   String
+  cliente     Cliente          @relation(fields: [clienteId], references: [id])
+  veiculoId   String
+  veiculo     Veiculo          @relation(fields: [veiculoId], references: [id])
+  servicoId   String?
+  servico     Servico?         @relation(fields: [servicoId], references: [id])
+  tecnicoId   String?
+  tecnico     Tecnico?         @relation(fields: [tecnicoId], references: [id])
+  usuarioId   String?
+  usuario     Usuario?         @relation(fields: [usuarioId], references: [id])
+
+  dataHora    DateTime
+  duracao     Int              @default(60)
+  status      StatusAgendamento @default(PENDENTE)
+  observacoes String?
+
+  ordem       OrdemServico?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("agendamentos")
+}
+
+model OrdemServico {
+  id               String        @id @default(cuid())
+  numero           Int
+  tenantId         String
+  tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  clienteId        String
+  cliente          Cliente       @relation(fields: [clienteId], references: [id])
+  veiculoId        String
+  veiculo          Veiculo       @relation(fields: [veiculoId], references: [id])
+  tecnicoId        String?
+  tecnico          Tecnico?      @relation(fields: [tecnicoId], references: [id])
+  usuarioId        String?
+  usuario          Usuario?      @relation(fields: [usuarioId], references: [id])
+  agendamentoId    String?       @unique
+  agendamento      Agendamento?  @relation(fields: [agendamentoId], references: [id])
+
+  status           StatusOrdem   @default(ABERTA)
+  kmEntrada        Int?
+  kmSaida          Int?
+  relatoCliente    String?
+  laudoTecnico     String?
+  observacoes      String?
+  dataEntrada      DateTime      @default(now())
+  dataPrevista     DateTime?
+  dataEntrega      DateTime?
+
+  totalMaoObra     Decimal       @default(0) @db.Decimal(10,2)
+  totalPecas       Decimal       @default(0) @db.Decimal(10,2)
+  desconto         Decimal       @default(0) @db.Decimal(10,2)
+  total            Decimal       @default(0) @db.Decimal(10,2)
+  pago             Boolean       @default(false)
+
+  itens            ItemOrdem[]
+  itensPeca        ItemPecaOrdem[]
+  historico        HistoricoOrdem[]
+  lancamentos      LancamentoFinanceiro[]
+  movimentosEstoque MovimentoEstoque[]
+  faturas          Fatura[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, numero])
+  @@map("ordens_servico")
+}
+
+model ItemOrdem {
+  id          String   @id @default(cuid())
+  ordemId     String
+  ordem       OrdemServico @relation(fields: [ordemId], references: [id], onDelete: Cascade)
+  servicoId   String
+  servico     Servico     @relation(fields: [servicoId], references: [id])
+
+  quantidade  Int
+  valorUnit   Decimal     @db.Decimal(10,2)
+  desconto    Decimal     @default(0) @db.Decimal(10,2)
+  total       Decimal     @db.Decimal(10,2)
+  observacoes String?
+
+  @@map("itens_ordem")
+}
+
+model ItemPecaOrdem {
+  id          String   @id @default(cuid())
+  ordemId     String
+  ordem       OrdemServico @relation(fields: [ordemId], references: [id], onDelete: Cascade)
+  pecaId      String
+  peca        Peca        @relation(fields: [pecaId], references: [id])
+
+  quantidade  Decimal     @db.Decimal(10,2)
+  valorUnit   Decimal     @db.Decimal(10,2)
+  desconto    Decimal     @default(0) @db.Decimal(10,2)
+  total       Decimal     @db.Decimal(10,2)
+
+  @@map("itens_peca_ordem")
+}
+
+model HistoricoOrdem {
+  id          String      @id @default(cuid())
+  ordemId     String
+  ordem       OrdemServico @relation(fields: [ordemId], references: [id], onDelete: Cascade)
+
+  status      StatusOrdem
+  observacao  String?
+  usuarioNome String
+
+  createdAt   DateTime @default(now())
+
+  @@map("historico_ordens")
+}
+
+model LancamentoFinanceiro {
+  id          String          @id @default(cuid())
+  tenantId    String
+  tenant      Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ordemId     String?
+  ordem       OrdemServico?    @relation(fields: [ordemId], references: [id])
+
+  tipo        TipoLancamento
+  categoria   String?
+  descricao   String
+  valor       Decimal         @db.Decimal(10,2)
+  data        DateTime        @default(now())
+  pago        Boolean         @default(false)
+
+  createdAt   DateTime @default(now())
+
+  @@map("lancamentos_financeiros")
+}
+
+model PontosFidelidade {
+  id          String          @id @default(cuid())
+  clienteId   String          @unique
+  cliente     Cliente         @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  pontos      Int             @default(0)
+  nivel       NivelFidelidade @default(BRONZE)
+
+  transacoes  TransacaoPontos[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("pontos_fidelidade")
+}
+
+model TransacaoPontos {
+  id          String               @id @default(cuid())
+  pontosId    String
+  pontos      PontosFidelidade     @relation(fields: [pontosId], references: [id], onDelete: Cascade)
+
+  tipo        TipoTransacaoPontos
+  quantidade  Int
+  descricao   String?
+  ordemId     String?
+  expiracao   DateTime?
+
+  createdAt   DateTime @default(now())
+
+  @@map("transacoes_pontos")
+}
+
+model TraccarServer {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  usuarioId String?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  nome      String
+  url       String
+  port      Int      @default(443)
+  username  String
+  password  String
+  ativo     Boolean  @default(true)
+  ordem     Int      @default(1)
+
+  @@unique([tenantId, usuarioId, nome])
+  @@map("traccar_servers")
+}
+
+model Orcamento {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  veiculoId   String?
+  veiculo     Veiculo? @relation(fields: [veiculoId], references: [id])
+  numero      Int      // sequencial por tenant
+  descricao   String?
+  status      String   @default("PENDENTE") // PENDENTE, APROVADO, RECUSADO, CONVERTIDO
+  total       Decimal  @db.Decimal(10,2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  itens       OrcamentoItem[]
+  fatura      Fatura?
+
+  @@unique([tenantId, numero])
+  @@map("orcamentos")
+}
+
+model OrcamentoItem {
+  id          String   @id @default(cuid())
+  orcamentoId String
+  orcamento   Orcamento @relation(fields: [orcamentoId], references: [id], onDelete: Cascade)
+  tipo        String   // SERVICO ou PECA
+  servicoId   String?
+  servico     Servico? @relation(fields: [servicoId], references: [id])
+  pecaId      String?
+  peca        Peca?    @relation(fields: [pecaId], references: [id])
+  quantidade  Int      @default(1)
+  valorUnit   Decimal  @db.Decimal(10,2)
+  desconto    Decimal  @default(0) @db.Decimal(10,2)
+  total       Decimal  @db.Decimal(10,2)
+
+  @@map("orcamento_itens")
+}
+
+model Fatura {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  numero      String   // ex: FA 2026/001
+  data        DateTime @default(now())
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  ordemId     String?
+  ordem       OrdemServico? @relation(fields: [ordemId], references: [id])
+  orcamentoId String?  @unique
+  orcamento   Orcamento? @relation(fields: [orcamentoId], references: [id])
+  total       Decimal  @db.Decimal(10,2)
+  iva         Decimal  @default(23) @db.Decimal(5,2)
+  nifEmpresa  String   // NIF da oficina (obrigatório)
+  emitida     Boolean  @default(false)
+  pdfUrl      String?   // URL do PDF gerado
+  createdAt   DateTime @default(now())
+
+  @@map("faturas")
+}
+
+model PendingTenant {
+  id          String   @id @default(cuid())
+  email       String
+  nome        String
+  plano       String
+  addons      String   // separados por vírgula
+  total       Float
+  gateway     String
+  status      String   @default("PENDING")
+  checkoutUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("pending_tenants")
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  usuarioId      String?
+  usuarioNome    String
+  acao           String   // ex: "Edição de peça", "Criação de OS"
+  entidade       String   // "Peca", "OrdemServico", etc.
+  entidadeId     String?
+  dadosAnteriores Json?
+  dadosNovos     Json?
+  createdAt      DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
