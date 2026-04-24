@@ -1,3 +1,4 @@
+import { NivelAcesso } from "@prisma/client";
 import { registrarAuditoria } from "@/lib/audit";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
