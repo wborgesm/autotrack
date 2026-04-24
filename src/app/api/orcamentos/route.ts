@@ -83,13 +83,13 @@ export async function POST(req: NextRequest) {
       data: {
         tenantId,
         numero: proximoNumero,
-        clienteId: validated.clienteId || null,
-        veiculoId: validated.veiculoId || null,
+        clienteId: validated.clienteId || undefined,
+        veiculoId: validated.veiculoId || undefined,
         descricao: validated.descricao,
         status: validated.status,
         total,
         itens: {
-          create: validated.itens.map((item) => ({
+          create: validated.itens.map((item: any) => ({
             tipo: item.tipo,
             servicoId: item.servicoId || null,
             pecaId: item.pecaId || null,
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
             total: item.quantidade * item.valorUnit - item.desconto,
           })),
         },
-      },
+      } as any,
       include: {
         cliente: { select: { id: true, nome: true } },
         itens: true,

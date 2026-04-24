@@ -504,7 +504,7 @@ model Orcamento {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   clienteId   String
-  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  cliente     Cliente @relation(fields: [clienteId], references: [id])
   veiculoId   String?
   veiculo     Veiculo? @relation(fields: [veiculoId], references: [id])
   numero      Int      // sequencial por tenant
@@ -545,7 +545,7 @@ model Fatura {
   numero      String   // ex: FA 2026/001
   data        DateTime @default(now())
   clienteId   String
-  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  cliente     Cliente @relation(fields: [clienteId], references: [id])
   ordemId     String?
   ordem       OrdemServico? @relation(fields: [ordemId], references: [id])
   orcamentoId String?  @unique
