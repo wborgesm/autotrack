@@ -2,15 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { checkApiPermissao } from "@/lib/permissoes";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  
+  // Apenas SUPER_ADMIN pode aceder à auditoria
+  if (!session || session.user.nivel !== "SUPER_ADMIN") {
+    return NextResponse.json({ error: "Acesso restrito ao SUPER_ADMIN" }, { status: 403 });
+  }
+  
   const tenantId = session.user.tenantId;
-  if (!tenantId) return NextResponse.json({ error: "Tenant não encontrado" }, { status: 400 });
-  if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.nivel)) {
-    return NextResponse.json({ error: "Permissão negada" }, { status: 403 });
+  if (!tenantId) {
+    return NextResponse.json({ error: "Tenant não encontrado" }, { status: 400 });
   }
 
   const { searchParams } = req.nextUrl;
@@ -19,7 +22,8 @@ export async function GET(req: NextRequest) {
   const limit = Number(searchParams.get("limit")) || 50;
   const page = Number(searchParams.get("page")) || 0;
 
-  const where: any = { tenantId };
+  // SUPER_ADMIN vê logs de todos os tenants
+  const where: any = {};
   if (entidade) where.entidade = entidade;
   if (usuarioId) where.usuarioId = usuarioId;
 

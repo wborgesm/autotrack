@@ -1,59 +1,51 @@
-import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token;
-    const path = req.nextUrl.pathname;
+export async function middleware(request: NextRequest) {
+  const token = await getToken({ req: request });
+  const path = request.nextUrl.pathname;
 
-    // Rotas públicas da API (checkout, ativação)
-    if (path === "/api/checkout" || path === "/api/ativar") {
-      return NextResponse.next();
-    }
-
-    if (path.startsWith("/api/auth") || path === "/login") {
-      return NextResponse.next();
-    }
-
-    if (!token) {
-      return NextResponse.redirect(new URL("/login", req.url));
-    }
-
-    if (token.tenantAtivo === false) {
-      return NextResponse.redirect(new URL("/login?error=tenant_inativo", req.url));
-    }
-
-    const nivel = token.nivel;
-
-    if (path.startsWith("/usuarios") && !["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(nivel)) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
-
-    if (path.startsWith("/configuracoes") && !["SUPER_ADMIN", "ADMIN"].includes(nivel)) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
-
-    if (nivel === "CLIENTE" && !path.startsWith("/portal")) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
-
+  // Permitir acesso a rotas públicas
+  if (
+    path.startsWith("/api/auth") ||
+    path.startsWith("/login") ||
+    path === "/" ||
+    path.startsWith("/_next") ||
+    path.startsWith("/favicon.ico")
+  ) {
     return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ req, token }) => {
-        const path = req.nextUrl.pathname;
-        // Permitir acesso público a estas rotas mesmo sem token
-        if (path === "/login" || path.startsWith("/api/auth") || path === "/api/checkout" || path === "/api/ativar") {
-          return true;
-        }
-        return !!token;
-      },
-    },
-    pages: { signIn: "/login" },
   }
-);
+
+  // Se não estiver autenticado, redirecionar para login
+  if (!token) {
+    if (path.startsWith("/api/")) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // SUPER_ADMIN pode aceder a tudo
+  if (token.nivel === "SUPER_ADMIN") {
+    return NextResponse.next();
+  }
+
+  // ADMIN não pode aceder à auditoria
+  if (path.startsWith("/auditoria") || path.startsWith("/api/auditoria")) {
+    if (path.startsWith("/api/")) {
+      return NextResponse.json({ error: "Acesso restrito ao SUPER_ADMIN" }, { status: 403 });
+    }
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // ADMIN não pode gerir tenants (se esta rota existir)
+  if (path.startsWith("/api/tenants") && token.nivel as string !== "SUPER_ADMIN") {
+    return NextResponse.json({ error: "Acesso restrito ao SUPER_ADMIN" }, { status: 403 });
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|uploads).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|public/).*)"],
 };
