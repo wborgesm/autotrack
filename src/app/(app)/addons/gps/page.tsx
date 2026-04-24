@@ -260,7 +260,7 @@ export default function GpsPage() {
                 <Plus className="mr-2 h-4 w-4" /> Novo Servidor
               </Button>
             </DialogTrigger>
-            <DialogContent aria-describedby={undefined} aria-describedby="dialog-desc"><p id="dialog-desc" class="hidden">Formulário</p>
+            <DialogContent aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
               <DialogHeader>
                 <DialogTitle>{editingServer ? "Editar Servidor" : "Novo Servidor Autotrack"}</DialogTitle>
               </DialogHeader>
@@ -393,7 +393,7 @@ export default function GpsPage() {
               Veículos Vinculados
               <Dialog open={vincularOpen} onOpenChange={setVincularOpen}>
                 <DialogTrigger asChild><Button size="sm"><Link2 className="mr-2 h-4 w-4" /> Vincular</Button></DialogTrigger>
-                <DialogContent aria-describedby={undefined} aria-describedby="dialog-desc"><p id="dialog-desc" class="hidden">Formulário</p>
+                <DialogContent aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
                   <DialogHeader><DialogTitle>Vincular Veículo a Dispositivo</DialogTitle></DialogHeader>
                   <div className="space-y-4 py-4">
                     <Select onValueChange={setSelectedVeiculo} value={selectedVeiculo}>

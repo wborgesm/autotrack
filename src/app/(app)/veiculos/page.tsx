@@ -36,7 +36,7 @@ export default function VeiculosPage() {
       <div className="flex justify-between"><h1 className="text-2xl font-bold">Veículos</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4"/>Novo Veículo</Button></DialogTrigger>
-          <DialogContent className="max-w-2xl" aria-describedby="dialog-desc"><p id="dialog-desc" class="hidden">Formulário</p>
+          <DialogContent className="max-w-2xl" aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
             <DialogHeader><DialogTitle>Novo Veículo</DialogTitle></DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2"><Label>Cliente</Label><Select onValueChange={v=>setForm({...form,clienteId:v})}><SelectTrigger><SelectValue placeholder="Selecione"/></SelectTrigger><SelectContent>{clientes.map(c=><SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent></Select></div>

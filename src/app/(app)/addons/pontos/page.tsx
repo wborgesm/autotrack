@@ -154,7 +154,7 @@ export default function PontosPage() {
                 Configurar
               </Button>
             </DialogTrigger>
-            <DialogContent aria-describedby="dialog-desc"><p id="dialog-desc" class="hidden">Formulário</p>
+            <DialogContent aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
               <DialogHeader>
                 <DialogTitle>Configuração do Programa de Pontos</DialogTitle>
               </DialogHeader>
@@ -281,7 +281,7 @@ export default function PontosPage() {
       </Card>
 
       <Dialog open={resgatarOpen} onOpenChange={setResgatarOpen}>
-        <DialogContent aria-describedby="dialog-desc"><p id="dialog-desc" class="hidden">Formulário</p>
+        <DialogContent aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
           <DialogHeader>
             <DialogTitle>Resgatar pontos</DialogTitle>
           </DialogHeader>

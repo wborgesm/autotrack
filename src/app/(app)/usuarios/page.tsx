@@ -117,7 +117,7 @@ export default function UsuariosPage() {
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700"><Plus className="mr-2 h-4 w-4" /> Novo Utilizador</Button>
           </DialogTrigger>
-          <DialogContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" aria-describedby="dialog-desc"><p id="dialog-desc" class="hidden">Formulário</p>
+          <DialogContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
             <DialogHeader><DialogTitle className="text-gray-900 dark:text-white">{editUser ? "Editar Utilizador" : "Novo Utilizador"}</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-4">
               <div><Label className="text-gray-700 dark:text-gray-300">Nome</Label><Input className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" value={form.nome} onChange={e => setForm({...form, nome: e.target.value})} /></div>

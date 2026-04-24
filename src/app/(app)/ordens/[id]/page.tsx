@@ -195,7 +195,7 @@ export default function OrdemDetalhePage() {
             <CardHeader className="flex flex-row items-center justify-between"><CardTitle>Serviços Realizados</CardTitle>
               <Dialog open={dialogServico} onOpenChange={setDialogServico}>
                 <DialogTrigger asChild><Button size="sm"><Plus className="mr-2 h-4 w-4"/>Adicionar Serviço</Button></DialogTrigger>
-                <DialogContent aria-describedby="dialog-desc"><p id="dialog-desc" class="hidden">Formulário</p>
+                <DialogContent aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
                   <DialogHeader><DialogTitle>Adicionar Serviço</DialogTitle></DialogHeader>
                   <div className="space-y-4">
                     <Select onValueChange={setServicoSelecionado}>
@@ -221,7 +221,7 @@ export default function OrdemDetalhePage() {
             <CardHeader className="flex flex-row items-center justify-between"><CardTitle>Peças Utilizadas</CardTitle>
               <Dialog open={dialogPeca} onOpenChange={setDialogPeca}>
                 <DialogTrigger asChild><Button size="sm"><Plus className="mr-2 h-4 w-4"/>Adicionar Peça</Button></DialogTrigger>
-                <DialogContent aria-describedby="dialog-desc"><p id="dialog-desc" class="hidden">Formulário</p>
+                <DialogContent aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
                   <DialogHeader><DialogTitle>Adicionar Peça</DialogTitle></DialogHeader>
                   <div className="space-y-4">
                     <Select onValueChange={setPecaSelecionada}>

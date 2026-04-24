@@ -137,7 +137,7 @@ export default function FinanceiroPage() {
             <DialogTrigger asChild>
               <Button><Plus className="mr-2 h-4 w-4" /> Novo Lançamento</Button>
             </DialogTrigger>
-            <DialogContent aria-describedby={undefined} aria-describedby="dialog-desc"><p id="dialog-desc" class="hidden">Formulário</p>
+            <DialogContent aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
               <DialogHeader><DialogTitle>Novo Lançamento</DialogTitle></DialogHeader>
               <div className="grid gap-4 py-4">
                 <div><Label>Tipo</Label>

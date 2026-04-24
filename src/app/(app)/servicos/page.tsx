@@ -33,7 +33,7 @@ export default function ServicosPage() {
       <div className="flex justify-between"><h1 className="text-2xl font-bold">Serviços</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4"/>Novo Serviço</Button></DialogTrigger>
-          <DialogContent aria-describedby={undefined} aria-describedby="dialog-desc"><p id="dialog-desc" class="hidden">Formulário</p><DialogHeader><DialogTitle>Novo Serviço</DialogTitle></DialogHeader>
+          <DialogContent aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p><DialogHeader><DialogTitle>Novo Serviço</DialogTitle></DialogHeader>
           <div className="grid gap-4"><div><Label>Nome</Label><Input value={form.nome} onChange={e=>setForm({...form,nome:e.target.value})}/></div>
           <div><Label>Descrição</Label><Input value={form.descricao} onChange={e=>setForm({...form,descricao:e.target.value})}/></div>
           <div><Label>Preço Mão de Obra (R$)</Label><Input type="number" step="0.01" value={form.precoMaoObra} onChange={e=>setForm({...form,precoMaoObra:e.target.value})}/></div>

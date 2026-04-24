@@ -194,7 +194,7 @@ export default function AgendaPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl" aria-describedby="dialog-desc"><p id="dialog-desc" class="hidden">Formulário</p>
+        <DialogContent className="max-w-2xl" aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
           <DialogHeader>
             <DialogTitle>
               {selected ? "Detalhes do Agendamento" : "Novo Agendamento"}

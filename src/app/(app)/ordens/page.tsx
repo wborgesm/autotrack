@@ -77,7 +77,7 @@ export default function OrdensPage() {
         <h1 className="text-2xl font-bold">Ordens de Serviço</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4"/>Nova OS</Button></DialogTrigger>
-          <DialogContent className="max-w-2xl" aria-describedby={undefined} aria-describedby="dialog-desc"><p id="dialog-desc" class="hidden">Formulário</p>
+          <DialogContent className="max-w-2xl" aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
             <DialogHeader><DialogTitle>Nova Ordem de Serviço</DialogTitle></DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2"><Label>Cliente *</Label>
