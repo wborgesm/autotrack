@@ -6,9 +6,10 @@ export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request });
   const path = request.nextUrl.pathname;
 
-  // Permitir acesso a rotas públicas
+  // Rotas públicas (não precisam de autenticação)
   if (
     path.startsWith("/api/auth") ||
+    path.startsWith("/api/health") ||  // ← adicionado
     path.startsWith("/login") ||
     path === "/" ||
     path.startsWith("/_next") ||

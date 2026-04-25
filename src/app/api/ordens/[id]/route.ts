@@ -1,3 +1,4 @@
+import { notificarMudancaEstadoOS } from "@/lib/sms-gateway";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -82,7 +83,7 @@ export async function PATCH(
 
   const ordemAtual = await prisma.ordemServico.findFirst({
     where: { id: params.id, tenantId },
-    include: { tenant: true, veiculo: true },
+    include: { tenant: true, veiculo: true, cliente: true },
   });
 
   if (!ordemAtual) {
@@ -102,7 +103,7 @@ export async function PATCH(
 
     const deveCreditarPontos = novoStatus === "ENTREGUE" && statusAnterior !== "ENTREGUE";
 
-    const ordem = await prisma.$transaction(async (tx) => {
+    const ordem = await prisma.$transaction(async (tx: any) => {
       const updated = await tx.ordemServico.update({
         where: { id: params.id },
         data: {
@@ -125,6 +126,7 @@ export async function PATCH(
       return updated;
     });
 
+    // Crédito de pontos (se aplicável)
     if (deveCreditarPontos && ordemAtual.tenant.addonPontos) {
       try {
         await creditarPontos({
@@ -136,6 +138,20 @@ export async function PATCH(
         });
       } catch (error) {
         console.error("Erro ao creditar pontos:", error);
+      }
+    }
+
+    // Envio de SMS (se OS ficou PRONTA ou ENTREGUE)
+    if (novoStatus && (novoStatus === "PRONTA" || novoStatus === "ENTREGUE") && ordemAtual.cliente?.telefone) {
+      try {
+        await notificarMudancaEstadoOS(
+          ordemAtual.cliente.telefone,
+          ordemAtual.cliente.nome,
+          novoStatus,
+          ordem.numero
+        );
+      } catch (smsError) {
+        console.error("Erro ao enviar SMS:", smsError);
       }
     }
 
@@ -179,7 +195,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Permissão negada" }, { status: 403 });
   }
 
-  const ordem = await prisma.$transaction(async (tx) => {
+  const ordem = await prisma.$transaction(async (tx: any) => {
     const updated = await tx.ordemServico.update({
       where: { id: params.id },
       data: { status: "CANCELADA" },
