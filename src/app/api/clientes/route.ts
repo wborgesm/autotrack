@@ -1,6 +1,7 @@
 import { NivelAcesso } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { getMobileUser } from "@/lib/auth-mobile";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkApiPermissao } from "@/lib/permissoes";
@@ -8,16 +9,18 @@ import { z } from "zod";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
+  const mobileUser = !session ? getMobileUser(req) : null;
+  if (!session && !mobileUser) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const tenantId = session.user.tenantId;
+  const tenantId = (session?.user.tenantId || mobileUser?.tenantId);
   if (!tenantId) {
     return NextResponse.json({ error: "Tenant não encontrado" }, { status: 400 });
   }
 
-  if (!checkApiPermissao(session.user.nivel, "clientes")) {
+  if (!checkApiPermissao((session?.user.nivel || mobileUser?.nivel || "CLIENTE"), "clientes")) {
     return NextResponse.json({ error: "Permissão negada" }, { status: 403 });
   }
 
@@ -74,16 +77,18 @@ const clienteSchema = z.object({
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
+  const mobileUser = !session ? getMobileUser(req) : null;
+  if (!session && !mobileUser) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const tenantId = session.user.tenantId;
+  const tenantId = (session?.user.tenantId || mobileUser?.tenantId);
   if (!tenantId) {
     return NextResponse.json({ error: "Tenant não encontrado" }, { status: 400 });
   }
 
-  if (!checkApiPermissao(session.user.nivel, "clientes")) {
+  if (!checkApiPermissao((session?.user.nivel || mobileUser?.nivel || "CLIENTE"), "clientes")) {
     return NextResponse.json({ error: "Permissão negada" }, { status: 403 });
   }
 

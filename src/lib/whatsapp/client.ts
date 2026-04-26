@@ -1,4 +1,5 @@
 import { Client, LocalAuth } from "whatsapp-web.js";
+import { processarFila } from "@/lib/notificacoes/fila";
 
 let client: Client | null = null;
 let qrCodeBase64: string | null = null;
@@ -46,6 +47,7 @@ export async function initWhatsApp(): Promise<Client> {
 
   client.on("ready", () => {
     console.log("🟢 WhatsApp conectado com sucesso!");
+      processarFila();
     qrCodeBase64 = null;
     connectionState = "CONNECTED";
   });
