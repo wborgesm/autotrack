@@ -1,3 +1,4 @@
+import { sendWhatsAppMessage } from "@/lib/whatsapp/client";
 import { notificarMudancaEstadoOS } from "@/lib/sms-gateway";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -141,7 +142,7 @@ export async function PATCH(
       }
     }
 
-    // Envio de SMS (se OS ficou PRONTA ou ENTREGUE)
+    // Envio de SMS
     if (novoStatus && (novoStatus === "PRONTA" || novoStatus === "ENTREGUE") && ordemAtual.cliente?.telefone) {
       try {
         await notificarMudancaEstadoOS(
@@ -153,6 +154,15 @@ export async function PATCH(
       } catch (smsError) {
         console.error("Erro ao enviar SMS:", smsError);
       }
+    }
+
+    // Envio de WhatsApp (segundo plano)
+    if (novoStatus && (novoStatus === "PRONTA" || novoStatus === "ENTREGUE") && ordemAtual.cliente?.telefone) {
+      // Dispara sem aguardar para não bloquear a resposta
+      sendWhatsAppMessage(
+        ordemAtual.cliente.telefone,
+        `Olá ${ordemAtual.cliente.nome}, a sua OS #${ordem.numero} foi atualizada para ${novoStatus}.`
+      ).catch((err) => console.error("Erro ao enviar WhatsApp:", err));
     }
 
     return NextResponse.json(ordem);
