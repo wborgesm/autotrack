@@ -240,6 +240,7 @@ model Tecnico {
   twoFactorSecret  String?
 
   ordens        OrdemServico[]
+  registrosTempo RegistroTempo[]
   agendamentos  Agendamento[]
 
   createdAt   DateTime @default(now())
@@ -389,6 +390,7 @@ model OrdemServico {
   itensPeca        ItemPecaOrdem[]
   historico        HistoricoOrdem[]
   lancamentos      LancamentoFinanceiro[]
+  registrosTempo   RegistroTempo[]
   movimentosEstoque MovimentoEstoque[]
   faturas          Fatura[]
 
@@ -633,4 +635,21 @@ model AuditoriaOS {
 
   @@index([osId])
   @@index([utilizadorId, criadoEm])
+}
+
+model RegistroTempo {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tecnicoId   String
+  tecnico     Tecnico  @relation(fields: [tecnicoId], references: [id], onDelete: Cascade)
+  ordemId     String?
+  ordem       OrdemServico? @relation(fields: [ordemId], references: [id], onDelete: SetNull)
+  tipo        String   // "ENTRADA", "SAIDA", "INTERVALO_INICIO", "INTERVALO_FIM"
+  dataHora    DateTime
+  observacao  String?
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId, tecnicoId, dataHora])
+  @@index([ordemId])
+  @@map("registros_tempo")
 }

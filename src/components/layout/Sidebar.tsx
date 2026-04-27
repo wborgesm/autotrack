@@ -21,6 +21,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const navItems = [
     { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
     { href: "/agenda", label: "Agenda", icon: Calendar },
+    { href: "/ponto", label: "Ponto Eletrónico", icon: Clock },
     { href: "/ordens", label: "Ordens", icon: ClipboardList },
     { href: "/clientes", label: "Clientes", icon: Users },
     { href: "/veiculos", label: "Veículos", icon: Car },

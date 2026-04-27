@@ -1,2 +1,3 @@
-2026/04/27-13:02:01.606 2b7ef Creating DB /var/www/html/autotrack/.wwebjs_auth/session/Default/shared_proto_db/metadata since it was missing.
-2026/04/27-13:02:01.622 2b7ef Reusing MANIFEST /var/www/html/autotrack/.wwebjs_auth/session/Default/shared_proto_db/metadata/MANIFEST-000001
+2026/04/27-13:20:43.159 2ba1b Reusing MANIFEST /var/www/html/autotrack/.wwebjs_auth/session/Default/shared_proto_db/metadata/MANIFEST-000001
+2026/04/27-13:20:43.160 2ba1b Recovering log #3
+2026/04/27-13:20:43.160 2ba1b Reusing old log /var/www/html/autotrack/.wwebjs_auth/session/Default/shared_proto_db/metadata/000003.log 
