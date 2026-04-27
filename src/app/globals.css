@@ -33,3 +33,13 @@
     font-size: 0.65rem !important;
   }
 }
+
+/* Dark mode fixes globais */
+.dark .bg-white { background-color: rgb(31 41 55) !important; }
+.dark .text-gray-900 { color: rgb(243 244 246) !important; }
+.dark .text-gray-800 { color: rgb(229 231 235) !important; }
+.dark .text-gray-700 { color: rgb(209 213 219) !important; }
+.dark .border-gray-200 { border-color: rgb(55 65 81) !important; }
+.dark .hover\:bg-gray-100:hover { background-color: rgb(55 65 81) !important; }
+.dark table, .dark th, .dark td { border-color: rgb(55 65 81) !important; }
+.dark .bg-gray-50 { background-color: rgb(31 41 55) !important; }

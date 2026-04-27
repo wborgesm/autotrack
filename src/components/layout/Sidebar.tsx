@@ -33,6 +33,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
   const adminItems = [
     { href: "/auditoria", label: "Auditoria", icon: ShieldCheck },
+    { href: "/alertas", label: "Alertas", icon: Bell },
     { href: "/usuarios", label: "Utilizadores", icon: Users },
     { href: "/configuracoes", label: "Configurações", icon: Settings },
     { href: "/tenants", label: "Empresas", icon: Building },

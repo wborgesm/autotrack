@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,54 +18,44 @@ export default function NotificacoesPage() {
   const [result, setResult] = useState("");
 
   const sendSms = async () => {
-    const res = await fetch("/api/testes/sms", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ telefone: smsPhone, mensagem: smsMessage }),
-    });
+    const res = await fetch("/api/testes/sms", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telefone: smsPhone, mensagem: smsMessage }) });
     const data = await res.json();
     setResult(res.ok ? "✅ SMS enviado!" : "❌ " + (data.error || "Erro"));
   };
 
   const sendWhatsApp = async () => {
-    const res = await fetch("/api/whatsapp/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: waPhone, message: waMessage }),
-    });
+    const res = await fetch("/api/whatsapp/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone: waPhone, message: waMessage }) });
     const data = await res.json();
     setResult(res.ok ? "✅ WhatsApp enviado!" : "❌ " + (data.error || "Erro"));
   };
 
-  if (!session || session.user.nivel !== "SUPER_ADMIN") {
-    return <div className="p-6">Acesso restrito ao SUPER_ADMIN.</div>;
-  }
+  if (!session || session.user.nivel !== "SUPER_ADMIN") return <div className="p-6 text-gray-900 dark:text-white">Acesso restrito ao SUPER_ADMIN.</div>;
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Configurações de Notificações</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Notificações</h1>
       <Tabs defaultValue="sms">
-        <TabsList>
+        <TabsList className="bg-gray-100 dark:bg-gray-800">
           <TabsTrigger value="sms"><Smartphone className="h-4 w-4 mr-2" /> SMS</TabsTrigger>
           <TabsTrigger value="whatsapp"><MessageCircle className="h-4 w-4 mr-2" /> WhatsApp</TabsTrigger>
         </TabsList>
         <TabsContent value="sms">
-          <Card>
-            <CardHeader><CardTitle>Enviar SMS (Teste)</CardTitle></CardHeader>
+          <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <CardHeader><CardTitle className="text-gray-900 dark:text-white">Enviar SMS</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div><Label>Telefone</Label><Input placeholder="+351..." value={smsPhone} onChange={e => setSmsPhone(e.target.value)} /></div>
-              <div><Label>Mensagem</Label><Input value={smsMessage} onChange={e => setSmsMessage(e.target.value)} /></div>
-              <Button onClick={sendSms}><Send className="h-4 w-4 mr-2" /> Enviar SMS</Button>
+              <div><Label className="text-gray-700 dark:text-gray-300">Telefone</Label><Input className="bg-gray-100 dark:bg-gray-700" placeholder="+351..." value={smsPhone} onChange={e => setSmsPhone(e.target.value)} /></div>
+              <div><Label className="text-gray-700 dark:text-gray-300">Mensagem</Label><Input className="bg-gray-100 dark:bg-gray-700" value={smsMessage} onChange={e => setSmsMessage(e.target.value)} /></div>
+              <Button onClick={sendSms} className="bg-blue-600"><Send className="h-4 w-4 mr-2" /> Enviar SMS</Button>
             </CardContent>
           </Card>
         </TabsContent>
         <TabsContent value="whatsapp">
-          <Card>
-            <CardHeader><CardTitle>Enviar WhatsApp (Teste)</CardTitle></CardHeader>
+          <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <CardHeader><CardTitle className="text-gray-900 dark:text-white">Enviar WhatsApp</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div><Label>Telefone</Label><Input placeholder="+351..." value={waPhone} onChange={e => setWaPhone(e.target.value)} /></div>
-              <div><Label>Mensagem</Label><Input value={waMessage} onChange={e => setWaMessage(e.target.value)} /></div>
-              <Button onClick={sendWhatsApp}><Send className="h-4 w-4 mr-2" /> Enviar WhatsApp</Button>
+              <div><Label className="text-gray-700 dark:text-gray-300">Telefone</Label><Input className="bg-gray-100 dark:bg-gray-700" placeholder="351..." value={waPhone} onChange={e => setWaPhone(e.target.value)} /></div>
+              <div><Label className="text-gray-700 dark:text-gray-300">Mensagem</Label><Input className="bg-gray-100 dark:bg-gray-700" value={waMessage} onChange={e => setWaMessage(e.target.value)} /></div>
+              <Button onClick={sendWhatsApp} className="bg-green-600"><Send className="h-4 w-4 mr-2" /> Enviar WhatsApp</Button>
             </CardContent>
           </Card>
         </TabsContent>

@@ -592,3 +592,14 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+
+model AlertaFraude {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tipo        String   // "LOGIN_SUSPEITO", "DESCONTO_EXCESSIVO", "OS_SEM_PAGAMENTO", "ACESSO_BLOQUEADO", etc.
+  gravidade   String   // "BAIXA", "MEDIA", "ALTA", "CRITICA"
+  descricao   String
+  entidadeId  String?  // ID da OS, utilizador, etc.
+  resolvido   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
