@@ -97,6 +97,8 @@ model Tenant {
   logo              String?
   plano             Plano         @default(STARTER)
   ativo             Boolean       @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
 
   addonGps          Boolean       @default(false)
   addonPontos       Boolean       @default(false)
@@ -112,6 +114,18 @@ model Tenant {
   bonusMoto         Int           @default(15)
   minimoResgate     Int           @default(500)
   validadeMeses     Int           @default(12)
+  facebook          String?
+  instagram         String?
+  tiktok            String?
+  latitude          String?
+  longitude         String?
+  raioPermitido     Int           @default(100)
+  tipoOficina       TipoOficina   @default(AMBOS)
+  moloniDevId       String?
+  moloniSecret      String?
+  moloniEmail       String?
+  moloniPass        String?
+  moloniCompanyId   String?
 
   usuarios          Usuario[]
   clientes          Cliente[]
@@ -127,6 +141,7 @@ model Tenant {
   traccarServers    TraccarServer[]
   orcamentos        Orcamento[]
   faturas           Fatura[]
+  alugueres        Aluguer[]
 
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -143,6 +158,8 @@ model Usuario {
   senha       String
   nivel       NivelAcesso @default(CLIENTE)
   ativo       Boolean     @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
   avatar      String?
 
   agendamentos Agendamento[]
@@ -168,6 +185,8 @@ model Cliente {
   endereco    String?
   observacoes String?
   ativo       Boolean  @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
 
   veiculos          Veiculo[]
   ordens            OrdemServico[]
@@ -175,6 +194,7 @@ model Cliente {
   pontosFidelidade  PontosFidelidade?
   orcamentos        Orcamento[]
   faturas           Fatura[]
+  alugueres        Aluguer[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -202,6 +222,8 @@ model Veiculo {
   chassi      String?
   observacoes String?
   ativo       Boolean     @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
 
   imeiGps              String?
   dispositivoTraccarId Int?
@@ -209,6 +231,7 @@ model Veiculo {
   ordens        OrdemServico[]
   agendamentos  Agendamento[]
   orcamentos    Orcamento[]
+  alugueres    Aluguer[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -228,8 +251,11 @@ model Tecnico {
   especialidade String?
   telefone      String?
   ativo         Boolean @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
 
   ordens        OrdemServico[]
+  registrosTempo RegistroTempo[]
   agendamentos  Agendamento[]
 
   createdAt   DateTime @default(now())
@@ -249,6 +275,8 @@ model Servico {
   tempoEstMin   Int?
   precoMaoObra  Decimal     @db.Decimal(10,2)
   ativo         Boolean     @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
 
   itensOrdem    ItemOrdem[]
   agendamentos  Agendamento[]
@@ -278,6 +306,8 @@ model Peca {
   margemLucro Decimal?      @db.Decimal(5,2)
   imagem      String?
   ativo       Boolean       @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
 
   movimentos  MovimentoEstoque[]
   itensPeca   ItemPecaOrdem[]
@@ -370,6 +400,8 @@ model OrdemServico {
   desconto         Decimal       @default(0) @db.Decimal(10,2)
   total            Decimal       @default(0) @db.Decimal(10,2)
   pago             Boolean       @default(false)
+  estadoFiscal    String?        @default("SEM_DOCUMENTO")
+  numFatura       String?
 
   itens            ItemOrdem[]
   itensPeca        ItemPecaOrdem[]
@@ -444,6 +476,8 @@ model LancamentoFinanceiro {
   valor       Decimal         @db.Decimal(10,2)
   data        DateTime        @default(now())
   pago        Boolean         @default(false)
+  estadoFiscal    String?        @default("SEM_DOCUMENTO")
+  numFatura       String?
 
   createdAt   DateTime @default(now())
 
@@ -494,6 +528,8 @@ model TraccarServer {
   username  String
   password  String
   ativo     Boolean  @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
   ordem     Int      @default(1)
 
   @@unique([tenantId, usuarioId, nome])
@@ -598,6 +634,7 @@ model RegistroTempo {
   id          String   @id @default(cuid())
   tenantId    String
   tecnicoId   String?
+  tecnico     Tecnico? @relation(fields: [tecnicoId], references: [id])
   usuarioId   String?
   ordemId     String?
   ordem       OrdemServico? @relation(fields: [ordemId], references: [id], onDelete: SetNull)
@@ -621,4 +658,66 @@ model AlertaFraude {
   entidadeId  String?
   resolvido   Boolean  @default(false)
   createdAt   DateTime @default(now())
+}
+
+model Aluguer {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  veiculoId   String
+  veiculo     Veiculo  @relation(fields: [veiculoId], references: [id])
+  dataInicio  DateTime
+  dataFim     DateTime?
+  valorDiaria Decimal  @db.Decimal(10,2)
+  valorTotal  Decimal? @db.Decimal(10,2)
+  status      String   @default("ATIVO")
+  observacoes String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("alugueres")
+}
+
+model Caixa {
+  id           String    @id @default(cuid())
+  tenantId     String
+  abertura     DateTime
+  fechamento   DateTime?
+  saldoInicial Decimal   @default(0) @db.Decimal(10,2)
+  usuarioId    String
+  createdAt    DateTime  @default(now())
+
+  @@map("caixas")
+}
+
+model Venda {
+  id              String   @id @default(cuid())
+  tenantId        String
+  total           Decimal  @db.Decimal(10,2)
+  metodoPagamento String
+  itens           VendaItem[]
+  usuarioId       String
+  createdAt       DateTime @default(now())
+
+  @@map("vendas")
+}
+
+model VendaItem {
+  id     String @id @default(cuid())
+  vendaId String
+  venda   Venda  @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  tipo   String
+  nome   String
+  qtd    Int
+  preco  Decimal @db.Decimal(10,2)
+
+  @@map("venda_itens")
+}
+
+enum TipoOficina {
+  CARROS
+  MOTOS
+  AMBOS
 }

@@ -23,16 +23,17 @@ export async function GET(req: NextRequest) {
   const resumo: Record<string, any> = {};
   for (let i = 0; i < registos.length; i++) {
     const reg = registos[i];
-    if (!resumo[reg.tecnicoId]) resumo[reg.tecnicoId] = { nome: reg.tecnico.nome, minutos: 0 };
+    const id = reg.tecnicoId || reg.usuarioId || "sem_id";
+    if (!resumo[id]) resumo[id] = { nome: reg.tecnico?.nome || reg.usuarioId || "Utilizador", minutos: 0 };
     if (reg.tipo === "ENTRADA") {
-      const saida = registos.slice(i + 1).find(r => r.tecnicoId === reg.tecnicoId && r.tipo === "SAIDA");
-      if (saida) resumo[reg.tecnicoId].minutos += (new Date(saida.dataHora).getTime() - new Date(reg.dataHora).getTime()) / 60000;
+      const saida = registos.slice(i + 1).find(r => (r.tecnicoId === reg.tecnicoId || r.usuarioId === reg.usuarioId) && r.tipo === "SAIDA");
+      if (saida) resumo[id].minutos += (new Date(saida.dataHora).getTime() - new Date(reg.dataHora).getTime()) / 60000;
     }
   }
 
   return NextResponse.json({
     porTecnico: Object.entries(resumo).map(([id, data]: any) => ({
-      tecnicoId: id, nome: data.nome, horas: (data.minutos / 60).toFixed(1)
+      id, nome: data.nome, horas: (data.minutos / 60).toFixed(1)
     })),
     totalRegistos: registos.length,
   });
