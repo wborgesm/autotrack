@@ -97,13 +97,6 @@ model Tenant {
   logo              String?
   plano             Plano         @default(STARTER)
   ativo             Boolean       @default(true)
-  horarioTrabalhoInicio String? // "08:00"
-  horarioAlmocoInicio   String? // "12:00"
-  horarioAlmocoFim      String? // "13:00"
-  horarioTrabalhoFim    String? // "18:00"
-  tipoOficina      TipoOficina   @default(AMBOS)
-  twoFactorEnabled Boolean @default(false)
-  twoFactorSecret  String?
 
   addonGps          Boolean       @default(false)
   addonPontos       Boolean       @default(false)
@@ -119,17 +112,6 @@ model Tenant {
   bonusMoto         Int           @default(15)
   minimoResgate     Int           @default(500)
   validadeMeses     Int           @default(12)
-  moloniDevId       String?
-  moloniSecret      String?
-  moloniEmail       String?
-  moloniPass        String?
-  moloniCompanyId   String?
-  facebook          String?
-  instagram         String?
-  tiktok            String?
-  latitude          String?
-  longitude         String?
-  raioPermitido     Int           @default(100)
 
   usuarios          Usuario[]
   clientes          Cliente[]
@@ -145,7 +127,6 @@ model Tenant {
   traccarServers    TraccarServer[]
   orcamentos        Orcamento[]
   faturas           Fatura[]
-  alugueres        Aluguer[]
 
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -162,13 +143,6 @@ model Usuario {
   senha       String
   nivel       NivelAcesso @default(CLIENTE)
   ativo       Boolean     @default(true)
-  horarioTrabalhoInicio String? // "08:00"
-  horarioAlmocoInicio   String? // "12:00"
-  horarioAlmocoFim      String? // "13:00"
-  horarioTrabalhoFim    String? // "18:00"
-  tipoOficina      TipoOficina   @default(AMBOS)
-  twoFactorEnabled Boolean @default(false)
-  twoFactorSecret  String?
   avatar      String?
 
   agendamentos Agendamento[]
@@ -178,8 +152,6 @@ model Usuario {
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  diaPagamento      String?   // "SEGUNDA", "TERCA", etc.
-  alertaPagamento    Boolean   @default(false)
 
   @@unique([tenantId, email])
   @@map("usuarios")
@@ -196,13 +168,6 @@ model Cliente {
   endereco    String?
   observacoes String?
   ativo       Boolean  @default(true)
-  horarioTrabalhoInicio String? // "08:00"
-  horarioAlmocoInicio   String? // "12:00"
-  horarioAlmocoFim      String? // "13:00"
-  horarioTrabalhoFim    String? // "18:00"
-  tipoOficina      TipoOficina   @default(AMBOS)
-  twoFactorEnabled Boolean @default(false)
-  twoFactorSecret  String?
 
   veiculos          Veiculo[]
   ordens            OrdemServico[]
@@ -210,12 +175,9 @@ model Cliente {
   pontosFidelidade  PontosFidelidade?
   orcamentos        Orcamento[]
   faturas           Fatura[]
-  alugueres        Aluguer[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  diaPagamento      String?   // "SEGUNDA", "TERCA", etc.
-  alertaPagamento    Boolean   @default(false)
 
   @@unique([tenantId, cpf])
   @@map("clientes")
@@ -240,13 +202,6 @@ model Veiculo {
   chassi      String?
   observacoes String?
   ativo       Boolean     @default(true)
-  horarioTrabalhoInicio String? // "08:00"
-  horarioAlmocoInicio   String? // "12:00"
-  horarioAlmocoFim      String? // "13:00"
-  horarioTrabalhoFim    String? // "18:00"
-  tipoOficina      TipoOficina   @default(AMBOS)
-  twoFactorEnabled Boolean @default(false)
-  twoFactorSecret  String?
 
   imeiGps              String?
   dispositivoTraccarId Int?
@@ -254,12 +209,9 @@ model Veiculo {
   ordens        OrdemServico[]
   agendamentos  Agendamento[]
   orcamentos    Orcamento[]
-  alugueres        Aluguer[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  diaPagamento      String?   // "SEGUNDA", "TERCA", etc.
-  alertaPagamento    Boolean   @default(false)
 
   @@unique([tenantId, placa])
   @@map("veiculos")
@@ -276,22 +228,12 @@ model Tecnico {
   especialidade String?
   telefone      String?
   ativo         Boolean @default(true)
-  horarioTrabalhoInicio String? // "08:00"
-  horarioAlmocoInicio   String? // "12:00"
-  horarioAlmocoFim      String? // "13:00"
-  horarioTrabalhoFim    String? // "18:00"
-  tipoOficina      TipoOficina   @default(AMBOS)
-  twoFactorEnabled Boolean @default(false)
-  twoFactorSecret  String?
 
   ordens        OrdemServico[]
-  registrosTempo RegistroTempo[]
   agendamentos  Agendamento[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  diaPagamento      String?   // "SEGUNDA", "TERCA", etc.
-  alertaPagamento    Boolean   @default(false)
 
   @@map("tecnicos")
 }
@@ -307,13 +249,6 @@ model Servico {
   tempoEstMin   Int?
   precoMaoObra  Decimal     @db.Decimal(10,2)
   ativo         Boolean     @default(true)
-  horarioTrabalhoInicio String? // "08:00"
-  horarioAlmocoInicio   String? // "12:00"
-  horarioAlmocoFim      String? // "13:00"
-  horarioTrabalhoFim    String? // "18:00"
-  tipoOficina      TipoOficina   @default(AMBOS)
-  twoFactorEnabled Boolean @default(false)
-  twoFactorSecret  String?
 
   itensOrdem    ItemOrdem[]
   agendamentos  Agendamento[]
@@ -321,8 +256,6 @@ model Servico {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  diaPagamento      String?   // "SEGUNDA", "TERCA", etc.
-  alertaPagamento    Boolean   @default(false)
 
   @@map("servicos")
 }
@@ -345,13 +278,6 @@ model Peca {
   margemLucro Decimal?      @db.Decimal(5,2)
   imagem      String?
   ativo       Boolean       @default(true)
-  horarioTrabalhoInicio String? // "08:00"
-  horarioAlmocoInicio   String? // "12:00"
-  horarioAlmocoFim      String? // "13:00"
-  horarioTrabalhoFim    String? // "18:00"
-  tipoOficina      TipoOficina   @default(AMBOS)
-  twoFactorEnabled Boolean @default(false)
-  twoFactorSecret  String?
 
   movimentos  MovimentoEstoque[]
   itensPeca   ItemPecaOrdem[]
@@ -359,8 +285,6 @@ model Peca {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  diaPagamento      String?   // "SEGUNDA", "TERCA", etc.
-  alertaPagamento    Boolean   @default(false)
 
   @@unique([tenantId, codigo])
   @@map("pecas")
@@ -410,8 +334,6 @@ model Agendamento {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  diaPagamento      String?   // "SEGUNDA", "TERCA", etc.
-  alertaPagamento    Boolean   @default(false)
 
   @@map("agendamentos")
 }
@@ -448,8 +370,6 @@ model OrdemServico {
   desconto         Decimal       @default(0) @db.Decimal(10,2)
   total            Decimal       @default(0) @db.Decimal(10,2)
   pago             Boolean       @default(false)
-  estadoFiscal    String?        @default("SEM_DOCUMENTO")
-  numFatura       String?
 
   itens            ItemOrdem[]
   itensPeca        ItemPecaOrdem[]
@@ -461,8 +381,6 @@ model OrdemServico {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  diaPagamento      String?   // "SEGUNDA", "TERCA", etc.
-  alertaPagamento    Boolean   @default(false)
 
   @@unique([tenantId, numero])
   @@map("ordens_servico")
@@ -526,8 +444,6 @@ model LancamentoFinanceiro {
   valor       Decimal         @db.Decimal(10,2)
   data        DateTime        @default(now())
   pago        Boolean         @default(false)
-  estadoFiscal    String?        @default("SEM_DOCUMENTO")
-  numFatura       String?
 
   createdAt   DateTime @default(now())
 
@@ -546,8 +462,6 @@ model PontosFidelidade {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  diaPagamento      String?   // "SEGUNDA", "TERCA", etc.
-  alertaPagamento    Boolean   @default(false)
 
   @@map("pontos_fidelidade")
 }
@@ -580,13 +494,6 @@ model TraccarServer {
   username  String
   password  String
   ativo     Boolean  @default(true)
-  horarioTrabalhoInicio String? // "08:00"
-  horarioAlmocoInicio   String? // "12:00"
-  horarioAlmocoFim      String? // "13:00"
-  horarioTrabalhoFim    String? // "18:00"
-  tipoOficina      TipoOficina   @default(AMBOS)
-  twoFactorEnabled Boolean @default(false)
-  twoFactorSecret  String?
   ordem     Int      @default(1)
 
   @@unique([tenantId, usuarioId, nome])
@@ -607,8 +514,6 @@ model Orcamento {
   total       Decimal  @db.Decimal(10,2)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  diaPagamento      String?   // "SEGUNDA", "TERCA", etc.
-  alertaPagamento    Boolean   @default(false)
 
   itens       OrcamentoItem[]
   fatura      Fatura?
@@ -668,8 +573,6 @@ model PendingTenant {
   checkoutUrl String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  diaPagamento      String?   // "SEGUNDA", "TERCA", etc.
-  alertaPagamento    Boolean   @default(false)
 
   @@map("pending_tenants")
 }
@@ -694,8 +597,8 @@ model AuditLog {
 model RegistroTempo {
   id          String   @id @default(cuid())
   tenantId    String
-  tecnicoId   String
-  tecnico     Tecnico  @relation(fields: [tecnicoId], references: [id], onDelete: Cascade)
+  tecnicoId   String?
+  usuarioId   String?
   ordemId     String?
   ordem       OrdemServico? @relation(fields: [ordemId], references: [id], onDelete: SetNull)
   tipo        String   // "ENTRADA", "SAIDA", "INTERVALO_INICIO", "INTERVALO_FIM"
@@ -704,30 +607,9 @@ model RegistroTempo {
   createdAt   DateTime @default(now())
 
   @@index([tenantId, tecnicoId, dataHora])
+  @@index([tenantId, usuarioId, dataHora])
   @@index([ordemId])
   @@map("registros_tempo")
-}
-
-model Aluguer {
-  id          String   @id @default(cuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  clienteId   String
-  cliente     Cliente  @relation(fields: [clienteId], references: [id])
-  veiculoId   String
-  veiculo     Veiculo  @relation(fields: [veiculoId], references: [id])
-  dataInicio  DateTime
-  dataFim     DateTime?
-  valorDiaria Decimal  @db.Decimal(10,2)
-  valorTotal  Decimal? @db.Decimal(10,2)
-  status      String   @default("ATIVO")
-  observacoes String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  diaPagamento      String?   // "SEGUNDA", "TERCA", etc.
-  alertaPagamento    Boolean   @default(false)
-
-  @@map("alugueres")
 }
 
 model AlertaFraude {
@@ -739,58 +621,4 @@ model AlertaFraude {
   entidadeId  String?
   resolvido   Boolean  @default(false)
   createdAt   DateTime @default(now())
-}
-
-enum TipoOficina {
-  CARROS
-  MOTOS
-  AMBOS
-}
-
-model LembretePonto {
-  id         String   @id @default(cuid())
-  tenantId   String
-  usuarioId  String
-  tipo       String   // "CHECKIN_MANHA", "ALMOCO_SAIDA", "ALMOCO_RETORNO", "CHECKOUT_FIM"
-  horario    String   // "08:00", "12:00", etc.
-  ativo      Boolean  @default(true)
-  createdAt  DateTime @default(now())
-}
-
-model Caixa {
-  id           String    @id @default(cuid())
-  tenantId     String
-  abertura     DateTime
-  fechamento   DateTime?
-  saldoInicial Decimal   @default(0) @db.Decimal(10,2)
-  usuarioId    String
-  createdAt    DateTime  @default(now())
-
-  @@map("caixas")
-}
-
-model Venda {
-  id              String   @id @default(cuid())
-  tenantId        String
-  total           Decimal  @db.Decimal(10,2)
-  metodoPagamento String
-  itens           VendaItem[]
-  usuarioId       String
-  createdAt       DateTime @default(now())
-
-  @@map("vendas")
-}
-
-
-
-model VendaItem {
-  id     String @id @default(cuid())
-  vendaId String
-  venda   Venda  @relation(fields: [vendaId], references: [id], onDelete: Cascade)
-  tipo   String
-  nome   String
-  qtd    Int
-  preco  Decimal @db.Decimal(10,2)
-
-  @@map("venda_itens")
 }

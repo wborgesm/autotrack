@@ -10,10 +10,11 @@ import { Play, Coffee, LogOut, Clock, MapPin, Navigation } from "lucide-react";
 
 export default function PontoPage() {
   const { data: session } = useSession();
-  const [tecnicos, setTecnicos] = useState<any[]>([]);
-  const [ordens, setOrdens] = useState<any[]>([]);
   const [tecnicoId, setTecnicoId] = useState("");
+  const [referenciaId, setReferenciaId] = useState(""); // usuarioId ou tecnicoId
+  const [referenciaTipo, setReferenciaTipo] = useState<"tecnico" | "usuario">("usuario");
   const [ordemId, setOrdemId] = useState("");
+  const [ordens, setOrdens] = useState<any[]>([]);
   const [registos, setRegistos] = useState<any[]>([]);
   const [msg, setMsg] = useState("");
   const [localizacao, setLocalizacao] = useState<{ lat: number; lng: number } | null>(null);
@@ -21,7 +22,26 @@ export default function PontoPage() {
 
   useEffect(() => {
     if (!session) return;
-    fetch("/api/tecnicos").then(r => r.ok ? r.json() : []).then(d => setTecnicos(Array.isArray(d) ? d : [])).catch(() => setTecnicos([]));
+
+    // Tenta buscar o técnico associado ao utilizador
+    fetch(`/api/tecnicos?usuarioId=${session.user.id}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(d => {
+        const tecnico = Array.isArray(d) && d.length > 0 ? d[0] : null;
+        if (tecnico) {
+          setTecnicoId(tecnico.id);
+          setReferenciaId(tecnico.id);
+          setReferenciaTipo("tecnico");
+          setMsg(`🔧 ${tecnico.nome} — pronto para registar`);
+        } else {
+          // Usa o próprio ID de utilizador
+          setReferenciaId(session.user.id);
+          setReferenciaTipo("usuario");
+          setMsg(`👤 ${session.user.name} — pronto para registar`);
+        }
+      })
+      .catch(() => setMsg("Erro ao carregar dados."));
+
     fetch("/api/ordens?status=ABERTA&status=EM_DIAGNOSTICO&status=EM_SERVICO")
       .then(r => r.ok ? r.json() : []).then(d => setOrdens(Array.isArray(d) ? d : [])).catch(() => setOrdens([]));
     obterLocalizacao();
@@ -36,9 +56,10 @@ export default function PontoPage() {
   };
 
   const fetchRegistos = () => {
-    if (tecnicoId) fetch(`/api/tempo?tecnicoId=${tecnicoId}`).then(r => r.ok ? r.json() : []).then(d => setRegistos(Array.isArray(d) ? d : [])).catch(() => setRegistos([]));
+    const param = referenciaTipo === "tecnico" ? `tecnicoId=${referenciaId}` : `usuarioId=${referenciaId}`;
+    fetch(`/api/tempo?${param}`).then(r => r.ok ? r.json() : []).then(d => setRegistos(Array.isArray(d) ? d : [])).catch(() => setRegistos([]));
   };
-  useEffect(() => { fetchRegistos(); }, [tecnicoId]);
+  useEffect(() => { if (referenciaId) fetchRegistos(); }, [referenciaId]);
 
   const verificarLocalizacao = async () => {
     if (!localizacao) { setMsg("❌ Localização não disponível."); return false; }
@@ -49,9 +70,13 @@ export default function PontoPage() {
   };
 
   const registar = async (tipo: string) => {
-    if (!tecnicoId) { setMsg("Selecione o técnico."); return; }
+    if (!referenciaId) { setMsg("❌ Não foi possível identificar o utilizador."); return; }
     if (!(await verificarLocalizacao())) return;
-    const res = await fetch("/api/tempo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tecnicoId, ordemId: ordemId || null, tipo }) });
+    const body: any = { tipo, ordemId: ordemId || null };
+    if (referenciaTipo === "tecnico") body.tecnicoId = referenciaId;
+    else body.usuarioId = referenciaId;
+
+    const res = await fetch("/api/tempo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (res.ok) { setMsg(`✅ ${tipo} registado!`); fetchRegistos(); }
     else { const err = await res.json(); setMsg("❌ " + (err.error || "Erro")); }
   };
@@ -61,9 +86,12 @@ export default function PontoPage() {
       <h1 className="text-2xl font-bold flex items-center gap-2"><Clock className="h-6 w-6 text-blue-600" /> Ponto Eletrónico</h1>
       <Card><CardContent className="flex items-center justify-between p-4"><div className="flex items-center gap-2"><MapPin className="h-5 w-5 text-blue-600" /><span className="text-sm">{geoStatus}</span></div><Button variant="outline" size="sm" onClick={obterLocalizacao}><Navigation className="h-4 w-4 mr-2" /> Obter Localização</Button></CardContent></Card>
       <Card><CardHeader><CardTitle>Registar Ponto</CardTitle></CardHeader><CardContent className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div><Label>Técnico</Label><Select onValueChange={setTecnicoId}><SelectTrigger className="bg-gray-100 dark:bg-gray-700"><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{tecnicos.map((t: any) => <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>)}</SelectContent></Select></div>
-          <div><Label>OS (opcional)</Label><Select onValueChange={setOrdemId}><SelectTrigger className="bg-gray-100 dark:bg-gray-700"><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent><SelectItem value="__none__">Nenhuma</SelectItem>{ordens.map((o: any) => <SelectItem key={o.id} value={o.id}>#{o.numero} - {o.cliente?.nome}</SelectItem>)}</SelectContent></Select></div>
+        <div>
+          <Label>Ordem de Serviço (opcional)</Label>
+          <Select onValueChange={setOrdemId}>
+            <SelectTrigger className="bg-gray-100 dark:bg-gray-700"><SelectValue placeholder="Selecione a OS" /></SelectTrigger>
+            <SelectContent><SelectItem value="__none__">Nenhuma</SelectItem>{ordens.map((o: any) => <SelectItem key={o.id} value={o.id}>#{o.numero} - {o.cliente?.nome}</SelectItem>)}</SelectContent>
+          </Select>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => registar("ENTRADA")} className="bg-green-600"><Play className="mr-2 h-4 w-4" /> Iniciar</Button>
@@ -73,7 +101,7 @@ export default function PontoPage() {
         </div>
         {msg && <p className="text-sm font-medium">{msg}</p>}
       </CardContent></Card>
-      {tecnicoId && (
+      {referenciaId && (
         <Card><CardHeader><CardTitle>Registos de Hoje</CardTitle></CardHeader><CardContent>
           {registos.length === 0 && <p className="text-gray-500">Nenhum registo hoje.</p>}
           {registos.map((r: any) => (<div key={r.id} className="flex justify-between text-sm py-1"><span>{r.tipo.replace(/_/g, " ")}</span><span>{formatDateTime(r.dataHora)}</span></div>))}

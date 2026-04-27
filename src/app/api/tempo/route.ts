@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = req.nextUrl;
   const tecnicoId = searchParams.get("tecnicoId") || undefined;
+  const usuarioId = searchParams.get("usuarioId") || undefined;
   const ordemId = searchParams.get("ordemId") || undefined;
   const hoje = new Date();
   const inicio = searchParams.get("inicio") || new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()).toISOString();
@@ -18,6 +19,7 @@ export async function GET(req: NextRequest) {
 
   const where: any = { tenantId, dataHora: { gte: new Date(inicio), lte: new Date(fim) } };
   if (tecnicoId) where.tecnicoId = tecnicoId;
+  if (usuarioId) where.usuarioId = usuarioId;
   if (ordemId) where.ordemId = ordemId;
 
   const registos = await prisma.registroTempo.findMany({
@@ -35,11 +37,11 @@ export async function POST(req: NextRequest) {
   const tenantId = session.user.tenantId;
   if (!tenantId) return NextResponse.json({ error: "Tenant não encontrado" }, { status: 400 });
 
-  const { tecnicoId, ordemId, tipo, observacao } = await req.json();
-  if (!tecnicoId || !tipo) return NextResponse.json({ error: "tecnicoId e tipo são obrigatórios" }, { status: 400 });
+  const { tecnicoId, usuarioId, ordemId, tipo, observacao } = await req.json();
+  if ((!tecnicoId && !usuarioId) || !tipo) return NextResponse.json({ error: "tecnicoId ou usuarioId e tipo são obrigatórios" }, { status: 400 });
 
   const registo = await prisma.registroTempo.create({
-    data: { tenantId, tecnicoId, ordemId: ordemId || null, tipo, dataHora: new Date(), observacao: observacao || "" },
+    data: { tenantId, tecnicoId: tecnicoId || null, usuarioId: usuarioId || null, ordemId: ordemId || null, tipo, dataHora: new Date(), observacao: observacao || "" },
   });
 
   return NextResponse.json(registo, { status: 201 });
