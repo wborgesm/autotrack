@@ -141,6 +141,7 @@ model Tenant {
   traccarServers    TraccarServer[]
   orcamentos        Orcamento[]
   faturas           Fatura[]
+  encomendas       Encomenda[]
   alugueres        Aluguer[]
 
   createdAt         DateTime      @default(now())
@@ -194,6 +195,7 @@ model Cliente {
   pontosFidelidade  PontosFidelidade?
   orcamentos        Orcamento[]
   faturas           Fatura[]
+  encomendas       Encomenda[]
   alugueres        Aluguer[]
 
   createdAt   DateTime @default(now())
@@ -231,6 +233,7 @@ model Veiculo {
   ordens        OrdemServico[]
   agendamentos  Agendamento[]
   orcamentos    Orcamento[]
+  encomendas       Encomenda[]
   alugueres    Aluguer[]
 
   createdAt   DateTime @default(now())
@@ -281,6 +284,7 @@ model Servico {
   itensOrdem    ItemOrdem[]
   agendamentos  Agendamento[]
   orcamentoItens OrcamentoItem[]
+  encomendaItens EncomendaItem[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -312,6 +316,7 @@ model Peca {
   movimentos  MovimentoEstoque[]
   itensPeca   ItemPecaOrdem[]
   orcamentoItens OrcamentoItem[]
+  encomendaItens EncomendaItem[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -720,4 +725,39 @@ enum TipoOficina {
   CARROS
   MOTOS
   AMBOS
+}
+
+model Encomenda {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clienteId    String?
+  cliente      Cliente? @relation(fields: [clienteId], references: [id])
+  veiculoId    String?
+  veiculo      Veiculo? @relation(fields: [veiculoId], references: [id])
+  descricao    String?
+  tipo         String   @default("ENCOMENDA_OFICINA") // ENCOMENDA_OFICINA, ENCOMENDA_CLIENTE
+  dataPrevista DateTime?
+  status       String   @default("PENDENTE") // PENDENTE, RECEBIDA, CANCELADA
+  valorTotal   Decimal? @db.Decimal(10,2)
+  itens        EncomendaItem[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+}
+
+model EncomendaItem {
+  id            String   @id @default(cuid())
+  encomendaId   String
+  encomenda     Encomenda @relation(fields: [encomendaId], references: [id], onDelete: Cascade)
+  tipo          String   // "PRODUTO", "SERVICO", "LIVRE"
+  nome          String
+  qtd           Int      @default(1)
+  precoUnitario Decimal? @db.Decimal(10,2)
+  pecaId        String?
+  peca          Peca?    @relation(fields: [pecaId], references: [id])
+  servicoId     String?
+  servico       Servico? @relation(fields: [servicoId], references: [id])
+
+  @@map("encomenda_itens")
 }
