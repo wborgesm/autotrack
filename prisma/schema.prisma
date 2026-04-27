@@ -114,6 +114,9 @@ model Tenant {
   bonusMoto         Int           @default(15)
   minimoResgate     Int           @default(500)
   validadeMeses     Int           @default(12)
+  latitude          String?
+  longitude         String?
+  raioPermitido     Int           @default(100)
 
   usuarios          Usuario[]
   clientes          Cliente[]
@@ -129,6 +132,7 @@ model Tenant {
   traccarServers    TraccarServer[]
   orcamentos        Orcamento[]
   faturas           Fatura[]
+  alugueres        Aluguer[]
 
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -181,6 +185,7 @@ model Cliente {
   pontosFidelidade  PontosFidelidade?
   orcamentos        Orcamento[]
   faturas           Fatura[]
+  alugueres        Aluguer[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -217,6 +222,7 @@ model Veiculo {
   ordens        OrdemServico[]
   agendamentos  Agendamento[]
   orcamentos    Orcamento[]
+  alugueres        Aluguer[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -611,32 +617,6 @@ model AuditLog {
 }
 
 
-model AlertaFraude {
-  id          String   @id @default(cuid())
-  tenantId    String
-  tipo        String   // "LOGIN_SUSPEITO", "DESCONTO_EXCESSIVO", "OS_SEM_PAGAMENTO", "ACESSO_BLOQUEADO", etc.
-  gravidade   String   // "BAIXA", "MEDIA", "ALTA", "CRITICA"
-  descricao   String
-  entidadeId  String?  // ID da OS, utilizador, etc.
-  resolvido   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-}
-
-model AuditoriaOS {
-  id            String   @id @default(cuid())
-  osId          String
-  campo         String
-  valorAntes    String?
-  valorDepois   String?
-  utilizadorId  String
-  ip            String?
-  userAgent     String?
-  criadoEm      DateTime @default(now())
-
-  @@index([osId])
-  @@index([utilizadorId, criadoEm])
-}
-
 model RegistroTempo {
   id          String   @id @default(cuid())
   tenantId    String
@@ -654,13 +634,6 @@ model RegistroTempo {
   @@map("registros_tempo")
 }
 
-model Tenant {
-  // ... campos existentes ...
-  latitude       String?
-  longitude      String?
-  raioPermitido  Int     @default(100)
-}
-
 model Aluguer {
   id          String   @id @default(cuid())
   tenantId    String
@@ -673,10 +646,21 @@ model Aluguer {
   dataFim     DateTime?
   valorDiaria Decimal  @db.Decimal(10,2)
   valorTotal  Decimal? @db.Decimal(10,2)
-  status      String   @default("ATIVO") // ATIVO, FINALIZADO, CANCELADO
+  status      String   @default("ATIVO")
   observacoes String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@map("alugueres")
+}
+
+model AlertaFraude {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tipo        String
+  gravidade   String
+  descricao   String
+  entidadeId  String?
+  resolvido   Boolean  @default(false)
+  createdAt   DateTime @default(now())
 }

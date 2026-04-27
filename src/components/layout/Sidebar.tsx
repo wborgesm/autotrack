@@ -22,8 +22,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const navItems = [
     { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
     { href: "/agenda", label: "Agenda", icon: Calendar },
-    { href: "/ponto", label: "Ponto Eletrónico", icon: Clock },
-    { href: "/alugueres", label: "Alugueres", icon: Car },
     { href: "/ordens", label: "Ordens", icon: ClipboardList },
     { href: "/clientes", label: "Clientes", icon: Users },
     { href: "/veiculos", label: "Veículos", icon: Car },
@@ -47,7 +45,10 @@ export default function Sidebar({ onClose }: SidebarProps) {
     { href: "/configuracoes/whatsapp", label: "WhatsApp", icon: MessageCircle },
   ];
 
-  const addonItems = [];
+  const addonItems = [
+    { href: "/ponto", label: "Ponto Eletrónico", icon: Clock },
+    { href: "/alugueres", label: "Alugueres", icon: KeyRound },
+  ];
   if (session?.user.addons?.gps) addonItems.push({ href: "/addons/gps", label: "Autotrack", icon: MapPin });
   if (session?.user.addons?.pontos) addonItems.push({ href: "/addons/pontos", label: "Fidelidade", icon: Star });
 
@@ -65,22 +66,33 @@ export default function Sidebar({ onClose }: SidebarProps) {
             <item.icon size={18} />{item.label}
           </Link>
         ))}
-        {(adminItems.length > 0 || superAdminItems.length > 0) && <div className="pt-4 mt-4 border-t border-gray-700" />}
-        {adminItems.map(item => (
-          <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium", isActive(item.href) ? "bg-blue-900 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 hover:text-white")}>
-            <item.icon size={18} />{item.label}
-          </Link>
-        ))}
-        {session?.user?.nivel === "SUPER_ADMIN" && superAdminItems.map(item => (
-          <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium", isActive(item.href) ? "bg-purple-900 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 hover:text-white")}>
-            <item.icon size={18} />{item.label}
-          </Link>
-        ))}
+
+        <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700" />
+        <p className="px-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Módulos Adicionais</p>
         {addonItems.map(item => (
           <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium", isActive(item.href) ? "bg-blue-900 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 hover:text-white")}>
             <item.icon size={18} />{item.label}
           </Link>
         ))}
+
+        <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700" />
+        {adminItems.map(item => (
+          <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium", isActive(item.href) ? "bg-blue-900 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 hover:text-white")}>
+            <item.icon size={18} />{item.label}
+          </Link>
+        ))}
+
+        {session?.user?.nivel === "SUPER_ADMIN" && (
+          <>
+            <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700" />
+            <p className="px-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Super Admin</p>
+            {superAdminItems.map(item => (
+              <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium", isActive(item.href) ? "bg-purple-900 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 hover:text-white")}>
+                <item.icon size={18} />{item.label}
+              </Link>
+            ))}
+          </>
+        )}
       </nav>
       <div className="p-3 border-t border-gray-700">
         <div className="flex items-center gap-3 px-2 py-2">
