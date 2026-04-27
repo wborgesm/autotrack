@@ -81,8 +81,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     });
 
     verificarFraudes(tenantId, session.user.id).catch(console.error);
-    if (deveCreditarPontos && ordemAtual.tenant.addonPontos) {
-      try { await creditarPontos({ tenant: ordemAtual.tenant, clienteId: ordemAtual.clienteId, valorTotal: ordem.total.toNumber(), tipoVeiculo: ordemAtual.veiculo.tipo, ordemId: ordem.id }); } catch (error) { console.error("Erro ao creditar pontos:", error); }
+    if (deveCreditarPontos && ordemAtual.tenant.addonPontos && ordemAtual.clienteId) {
+      try { await creditarPontos({ tenant: ordemAtual.tenant, clienteId: ordemAtual.clienteId, valorTotal: ordem.total.toNumber(), tipoVeiculo: (ordemAtual.veiculo?.tipo || "CARRO"), ordemId: ordem.id }); } catch (error) { console.error("Erro ao creditar pontos:", error); }
     }
 
     if (novoStatus && (novoStatus === "PRONTA" || novoStatus === "ENTREGUE") && ordemAtual.cliente?.telefone) {

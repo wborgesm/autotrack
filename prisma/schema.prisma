@@ -374,10 +374,10 @@ model OrdemServico {
   tenantId         String
   tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  clienteId        String
-  cliente          Cliente       @relation(fields: [clienteId], references: [id])
-  veiculoId        String
-  veiculo          Veiculo       @relation(fields: [veiculoId], references: [id])
+  clienteId        String?
+  cliente          Cliente?      @relation(fields: [clienteId], references: [id])
+  veiculoId        String?
+  veiculo          Veiculo?      @relation(fields: [veiculoId], references: [id])
   tecnicoId        String?
   tecnico          Tecnico?      @relation(fields: [tecnicoId], references: [id])
   usuarioId        String?

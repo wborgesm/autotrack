@@ -47,6 +47,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
   const navItems = [
     { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
+    { href: "/caixa", label: "Caixa", icon: ShoppingCart },
     { href: "/agenda", label: "Agenda", icon: Calendar },
     { href: "/ordens", label: "Ordens", icon: ClipboardList },
     { href: "/clientes", label: "Clientes", icon: Users },
@@ -79,7 +80,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const addonItems = [
     { href: "/ponto", label: "Ponto Eletrónico", icon: Clock },
     { href: "/alugueres", label: "Alugueres", icon: KeyRound },
-    { href: "/caixa", label: "Caixa", icon: ShoppingCart },
   ];
   if (session?.user.addons?.gps) addonItems.push({ href: "/addons/gps", label: "Autotrack", icon: MapPin });
   if (session?.user.addons?.pontos) addonItems.push({ href: "/addons/pontos", label: "Fidelidade", icon: Star });
