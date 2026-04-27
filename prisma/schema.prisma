@@ -97,6 +97,8 @@ model Tenant {
   logo              String?
   plano             Plano         @default(STARTER)
   ativo             Boolean       @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
 
   addonGps          Boolean       @default(false)
   addonPontos       Boolean       @default(false)
@@ -143,6 +145,8 @@ model Usuario {
   senha       String
   nivel       NivelAcesso @default(CLIENTE)
   ativo       Boolean     @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
   avatar      String?
 
   agendamentos Agendamento[]
@@ -168,6 +172,8 @@ model Cliente {
   endereco    String?
   observacoes String?
   ativo       Boolean  @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
 
   veiculos          Veiculo[]
   ordens            OrdemServico[]
@@ -202,6 +208,8 @@ model Veiculo {
   chassi      String?
   observacoes String?
   ativo       Boolean     @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
 
   imeiGps              String?
   dispositivoTraccarId Int?
@@ -228,6 +236,8 @@ model Tecnico {
   especialidade String?
   telefone      String?
   ativo         Boolean @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
 
   ordens        OrdemServico[]
   agendamentos  Agendamento[]
@@ -249,6 +259,8 @@ model Servico {
   tempoEstMin   Int?
   precoMaoObra  Decimal     @db.Decimal(10,2)
   ativo         Boolean     @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
 
   itensOrdem    ItemOrdem[]
   agendamentos  Agendamento[]
@@ -278,6 +290,8 @@ model Peca {
   margemLucro Decimal?      @db.Decimal(5,2)
   imagem      String?
   ativo       Boolean       @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
 
   movimentos  MovimentoEstoque[]
   itensPeca   ItemPecaOrdem[]
@@ -493,6 +507,8 @@ model TraccarServer {
   username  String
   password  String
   ativo     Boolean  @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
   ordem     Int      @default(1)
 
   @@unique([tenantId, usuarioId, nome])

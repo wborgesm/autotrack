@@ -1,3 +1,2 @@
-2026/04/27-09:41:22.266 28d4d Reusing MANIFEST /var/www/html/autotrack/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
-2026/04/27-09:41:22.286 28d4d Recovering log #3
-2026/04/27-09:41:22.286 28d4d Reusing old log /var/www/html/autotrack/.wwebjs_auth/session/Default/Local Storage/leveldb/000003.log 
+2026/04/27-12:41:57.866 2b2b2 Creating DB /var/www/html/autotrack/.wwebjs_auth/session/Default/Local Storage/leveldb since it was missing.
+2026/04/27-12:41:57.902 2b2b2 Reusing MANIFEST /var/www/html/autotrack/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001

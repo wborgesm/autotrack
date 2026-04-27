@@ -1,3 +1,2 @@
-2026/04/27-09:41:31.569 28d56 Reusing MANIFEST /var/www/html/autotrack/.wwebjs_auth/session/Default/GCM Store/MANIFEST-000001
-2026/04/27-09:41:31.570 28d56 Recovering log #3
-2026/04/27-09:41:31.570 28d56 Reusing old log /var/www/html/autotrack/.wwebjs_auth/session/Default/GCM Store/000003.log 
+2026/04/27-12:42:09.256 2b2a9 Creating DB /var/www/html/autotrack/.wwebjs_auth/session/Default/GCM Store since it was missing.
+2026/04/27-12:42:09.262 2b2a9 Reusing MANIFEST /var/www/html/autotrack/.wwebjs_auth/session/Default/GCM Store/MANIFEST-000001

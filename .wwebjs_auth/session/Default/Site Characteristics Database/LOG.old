@@ -1,3 +1,2 @@
-2026/04/27-09:41:22.272 28d56 Reusing MANIFEST /var/www/html/autotrack/.wwebjs_auth/session/Default/Site Characteristics Database/MANIFEST-000001
-2026/04/27-09:41:22.273 28d56 Recovering log #3
-2026/04/27-09:41:22.273 28d56 Reusing old log /var/www/html/autotrack/.wwebjs_auth/session/Default/Site Characteristics Database/000003.log 
+2026/04/27-12:41:57.879 2b2b3 Creating DB /var/www/html/autotrack/.wwebjs_auth/session/Default/Site Characteristics Database since it was missing.
+2026/04/27-12:41:57.898 2b2b3 Reusing MANIFEST /var/www/html/autotrack/.wwebjs_auth/session/Default/Site Characteristics Database/MANIFEST-000001

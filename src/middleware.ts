@@ -10,6 +10,8 @@ export async function middleware(request: NextRequest) {
   if (
     path.startsWith("/api/auth") ||
     path.startsWith("/api/health") ||
+    path.startsWith("/api/whatsapp/status") ||
+    path.startsWith("/api/whatsapp/status") ||
     path.startsWith("/login") ||
     path === "/" ||
     path.startsWith("/_next") ||

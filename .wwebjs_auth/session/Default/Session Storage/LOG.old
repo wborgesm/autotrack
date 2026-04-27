@@ -1,3 +1,2 @@
-2026/04/27-09:41:22.971 28d42 Reusing MANIFEST /var/www/html/autotrack/.wwebjs_auth/session/Default/Session Storage/MANIFEST-000001
-2026/04/27-09:41:22.972 28d42 Recovering log #3
-2026/04/27-09:41:22.972 28d42 Reusing old log /var/www/html/autotrack/.wwebjs_auth/session/Default/Session Storage/000003.log 
+2026/04/27-12:41:57.953 2b2c9 Creating DB /var/www/html/autotrack/.wwebjs_auth/session/Default/Session Storage since it was missing.
+2026/04/27-12:41:57.978 2b2c9 Reusing MANIFEST /var/www/html/autotrack/.wwebjs_auth/session/Default/Session Storage/MANIFEST-000001
