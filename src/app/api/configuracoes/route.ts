@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
       nome: true, telefone: true, email: true, endereco: true, logo: true,
       latitude: true, longitude: true, raioPermitido: true, tipoOficina: true,
       addonGps: true, addonPontos: true, addonWhatsapp: true, addonPortalCliente: true,
+      moloniDevId: true, moloniSecret: true, moloniEmail: true, moloniPass: true, moloniCompanyId: true,
     },
   });
 
@@ -51,6 +52,11 @@ export async function PATCH(req: NextRequest) {
         latitude: oficina.latitude, longitude: oficina.longitude,
         raioPermitido: oficina.raioPermitido ? Number(oficina.raioPermitido) : undefined,
         tipoOficina: oficina.tipoOficina,
+        moloniDevId: oficina.moloniDevId,
+        moloniSecret: oficina.moloniSecret,
+        moloniEmail: oficina.moloniEmail,
+        moloniPass: oficina.moloniPass,
+        moloniCompanyId: oficina.moloniCompanyId,
       },
     });
   }

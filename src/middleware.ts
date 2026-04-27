@@ -21,6 +21,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Se não estiver autenticado, redirecionar para login
+  if (path.startsWith("/api/version")) return NextResponse.next();
   if (!token) {
     if (path.startsWith("/api/")) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });

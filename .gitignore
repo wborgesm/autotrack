@@ -7,3 +7,21 @@ scripts/
 *.deb
 uploads/
 .wwebjs_auth/
+
+# Uploads de utilizadores — NUNCA versionar
+/uploads/
+.wwebjs_auth/
+*.txt
+/criar-super-admin.js
+/create-super-admin.js
+/fix-admin.js
+/down.sql
+
+# Uploads de utilizadores — NUNCA versionar
+/uploads/
+.wwebjs_auth/
+*.txt
+/criar-super-admin.js
+/create-super-admin.js
+/fix-admin.js
+/down.sql

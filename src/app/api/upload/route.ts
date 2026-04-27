@@ -1,26 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { saveUploadedFile } from "@/lib/upload";
 
 export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File;
-    if (!file) return NextResponse.json({ error: "Ficheiro não enviado" }, { status: 400 });
+    const file = formData.get("file") as File | null;
+    if (!file) {
+      return NextResponse.json({ error: "Nenhum ficheiro enviado." }, { status: 400 });
+    }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const result = await saveUploadedFile(file);
+    if ("error" in result) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+    }
 
-    const ext = path.extname(file.name) || ".png";
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "avatars");
-
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(path.join(uploadDir, fileName), buffer);
-
-    return NextResponse.json({ url: `/uploads/avatars/${fileName}` });
+    return NextResponse.json({ url: result.url, filename: result.filename });
   } catch (error) {
     console.error("Erro no upload:", error);
-    return NextResponse.json({ error: "Erro ao fazer upload" }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
   }
 }

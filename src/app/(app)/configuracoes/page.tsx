@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Store, Smartphone, Star, MapPin, MessageCircle, Globe, Clock, Bell, Camera, Facebook, Instagram, Music } from "lucide-react";
+import { User, Store, Smartphone, Star, MapPin, MessageCircle, Globe, Clock, Bell, Camera, Facebook, Instagram, Music, Receipt, Building } from "lucide-react";
 
 export default function ConfiguracoesPage() {
   const { data: session, update } = useSession();
@@ -66,6 +66,7 @@ export default function ConfiguracoesPage() {
         <TabsList className="bg-gray-100 dark:bg-gray-800 flex flex-wrap">
           <TabsTrigger value="perfil"><User className="h-4 w-4 mr-2" /> Meu Perfil</TabsTrigger>
           <TabsTrigger value="oficina"><Store className="h-4 w-4 mr-2" /> Dados da Oficina</TabsTrigger>
+          <TabsTrigger value="fiscal"><Receipt className="h-4 w-4 mr-2" /> Faturação</TabsTrigger>
           <TabsTrigger value="addons"><Smartphone className="h-4 w-4 mr-2" /> Módulos Adicionais</TabsTrigger>
         </TabsList>
 
@@ -100,10 +101,10 @@ export default function ConfiguracoesPage() {
             {podeEditarOficina && (
               <>
                 <div className="border-t pt-4"><p className="font-semibold mb-2">🔗 Redes Sociais</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div className="flex items-center gap-2"><Facebook className="h-5 w-5 text-blue-600" /><Input className="bg-gray-100 dark:bg-gray-700" placeholder="Facebook" value={oficina.facebook || ""} onChange={e => setOficina({...oficina, facebook: e.target.value})} /></div>
                     <div className="flex items-center gap-2"><Instagram className="h-5 w-5 text-pink-600" /><Input className="bg-gray-100 dark:bg-gray-700" placeholder="Instagram" value={oficina.instagram || ""} onChange={e => setOficina({...oficina, instagram: e.target.value})} /></div>
-                    <div className="flex items-center gap-2"><Music className="h-5 w-5 text-black dark:text-white" /><Input className="bg-gray-100 dark:bg-gray-700" placeholder="TikTok" value={oficina.tiktok || ""} onChange={e => setOficina({...oficina, tiktok: e.target.value})} /></div>
+                    <div className="flex items-center gap-2"><Music className="h-5 w-5" /><Input className="bg-gray-100 dark:bg-gray-700" placeholder="TikTok" value={oficina.tiktok || ""} onChange={e => setOficina({...oficina, tiktok: e.target.value})} /></div>
                   </div>
                 </div>
                 <div className="border-t pt-4"><p className="font-semibold mb-2">📍 Localização para Ponto</p>
@@ -116,6 +117,26 @@ export default function ConfiguracoesPage() {
                 <Button onClick={handleSaveOficina} className="bg-blue-600">Guardar</Button>
               </>
             )}
+          </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="fiscal">
+          <Card><CardHeader><CardTitle>Faturação Certificada (Moloni)</CardTitle></CardHeader><CardContent className="space-y-4">
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                ⚠️ Configure aqui as credenciais da API Moloni. Estas credenciais são obtidas em{' '}
+                <a href="https://www.moloni.pt/dev/criar-uma-conta/" target="_blank" className="underline font-semibold">Moloni Developers</a>.
+                Após ativar a API, terá acesso ao <strong>Developer ID</strong> e <strong>Client Secret</strong>.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Developer ID</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.moloniDevId || ""} onChange={e => setOficina({...oficina, moloniDevId: e.target.value})} disabled={!podeEditarOficina} placeholder="ID do Developer" /></div>
+              <div><Label>Client Secret</Label><Input className="bg-gray-100 dark:bg-gray-700" type="password" value={oficina.moloniSecret || ""} onChange={e => setOficina({...oficina, moloniSecret: e.target.value})} disabled={!podeEditarOficina} placeholder="Chave secreta" /></div>
+              <div><Label>Email da conta Moloni</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.moloniEmail || ""} onChange={e => setOficina({...oficina, moloniEmail: e.target.value})} disabled={!podeEditarOficina} placeholder="email@exemplo.com" /></div>
+              <div><Label>Password da conta Moloni</Label><Input className="bg-gray-100 dark:bg-gray-700" type="password" value={oficina.moloniPass || ""} onChange={e => setOficina({...oficina, moloniPass: e.target.value})} disabled={!podeEditarOficina} placeholder="Password" /></div>
+              <div><Label>ID da Empresa (Company ID)</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.moloniCompanyId || ""} onChange={e => setOficina({...oficina, moloniCompanyId: e.target.value})} disabled={!podeEditarOficina} placeholder="ID numérico" /></div>
+            </div>
+            {podeEditarOficina && <Button onClick={handleSaveOficina} className="bg-blue-600">Guardar Configurações Fiscais</Button>}
           </CardContent></Card>
         </TabsContent>
 

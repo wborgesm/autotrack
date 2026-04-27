@@ -35,7 +35,7 @@ export const PERMISSOES: Record<NivelAcesso, Recurso[]> = {
     "dashboard", "agenda", "ordens"
   ],
   RECEPCIONISTA: [
-    "dashboard", "agenda", "clientes", "veiculos", "orcamentos", "ordens", "servicos"
+    "dashboard", "agenda", "clientes", "veiculos", "orcamentos", "ordens", "servicos", "estoque"
   ],
   CLIENTE: []
 };
@@ -57,19 +57,5 @@ export function podeGerenciarOrdem(
   if (["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(usuarioNivel)) return true;
   if (usuarioNivel === "TECNICO") return ordemTecnicoId === usuarioId || ordemUsuarioId === usuarioId;
   if (usuarioNivel === "RECEPCIONISTA") return ordemUsuarioId === usuarioId;
-  return false;
-}
-
-export function podeAcederTenant(nivel: string, tenantIdDoUtilizador: string, tenantIdDoSolicitado: string): boolean {
-  if (nivel === "SUPER_ADMIN") return true;
-  return tenantIdDoUtilizador === tenantIdDoSolicitado;
-}
-
-export function podeGerirUtilizador(nivelExecutor: string, tenantIdExecutor: string, nivelAlvo: string, tenantIdAlvo: string): boolean {
-  if (nivelExecutor === "SUPER_ADMIN") return true;
-  if (nivelExecutor === "ADMIN") {
-    if (nivelAlvo === "SUPER_ADMIN" || nivelAlvo === "ADMIN") return false;
-    return tenantIdExecutor === tenantIdAlvo;
-  }
   return false;
 }
