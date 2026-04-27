@@ -115,6 +115,9 @@ model Tenant {
   bonusMoto         Int           @default(15)
   minimoResgate     Int           @default(500)
   validadeMeses     Int           @default(12)
+  facebook          String?
+  instagram         String?
+  tiktok            String?
   latitude          String?
   longitude         String?
   raioPermitido     Int           @default(100)

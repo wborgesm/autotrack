@@ -81,15 +81,17 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     });
 
     verificarFraudes(tenantId, session.user.id).catch(console.error);
-
     if (deveCreditarPontos && ordemAtual.tenant.addonPontos) {
       try { await creditarPontos({ tenant: ordemAtual.tenant, clienteId: ordemAtual.clienteId, valorTotal: ordem.total.toNumber(), tipoVeiculo: ordemAtual.veiculo.tipo, ordemId: ordem.id }); } catch (error) { console.error("Erro ao creditar pontos:", error); }
     }
 
-    const oficinaNome = ordemAtual.tenant.nome || "AutoTrack";
     if (novoStatus && (novoStatus === "PRONTA" || novoStatus === "ENTREGUE") && ordemAtual.cliente?.telefone) {
-      try { await notificarMudancaEstadoOS(ordemAtual.cliente.telefone, ordemAtual.cliente.nome, novoStatus, ordem.numero, oficinaNome); } catch (e) { console.error(e); }
-      sendWhatsAppMessage(ordemAtual.cliente.telefone, `${oficinaNome}: Olá ${ordemAtual.cliente.nome}, a sua OS #${ordem.numero} foi atualizada para ${novoStatus}.`).catch(console.error);
+      const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+      const redes = [tenant?.facebook, tenant?.instagram, tenant?.tiktok].filter(Boolean).join(" | ");
+      const rodape = `${tenant?.telefone ? `\n📞 ${tenant.telefone}` : ""}${tenant?.endereco ? `\n📍 ${tenant.endereco}` : ""}${redes ? `\n🔗 ${redes}` : ""}`;
+
+      try { await notificarMudancaEstadoOS(ordemAtual.cliente.telefone, ordemAtual.cliente.nome, novoStatus, ordem.numero, tenantId); } catch (e) { console.error(e); }
+      sendWhatsAppMessage(ordemAtual.cliente.telefone, `🏪 *${tenant?.nome || "AutoTrack"}*\nOlá ${ordemAtual.cliente.nome}, a sua OS #${ordem.numero} mudou para *${novoStatus}*.${rodape}`).catch(console.error);
     }
 
     return NextResponse.json(ordem);

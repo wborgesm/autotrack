@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Store, Smartphone, Star, MapPin, MessageCircle, Globe, Clock, Bell, Camera } from "lucide-react";
+import { User, Store, Smartphone, Star, MapPin, MessageCircle, Globe, Clock, Bell, Camera, Facebook, Instagram, Music } from "lucide-react";
 
 export default function ConfiguracoesPage() {
   const { data: session, update } = useSession();
@@ -39,33 +39,25 @@ export default function ConfiguracoesPage() {
     formData.append("file", file);
     try {
       const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (res.ok) {
-        const data = await res.json();
-        setPerfil(p => ({ ...p, avatar: data.url }));
-      }
+      if (res.ok) { const data = await res.json(); setPerfil(p => ({ ...p, avatar: data.url })); }
     } catch (err) { console.error(err); }
     finally { setUploading(false); }
   };
 
   const handleSavePerfil = async () => {
     await fetch("/api/usuario/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nome: perfil.nome, avatar: perfil.avatar }) });
-    update();
-    alert("Perfil atualizado.");
+    update(); alert("Perfil atualizado.");
   };
 
   const handleSaveOficina = async () => {
     const res = await fetch("/api/configuracoes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ oficina }) });
-    if (res.ok) alert("Dados guardados.");
-    else alert("Erro ao guardar.");
+    if (res.ok) alert("Dados guardados."); else alert("Erro ao guardar.");
   };
 
   const handleSaveAddons = async () => {
     const res = await fetch("/api/configuracoes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ addons }) });
-    if (res.ok) alert("Addons atualizados.");
-    else alert("Erro ao guardar.");
+    if (res.ok) alert("Addons atualizados."); else alert("Erro ao guardar.");
   };
-
-  const showAvatarUpload = true; // todos podem alterar avatar
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
@@ -79,28 +71,18 @@ export default function ConfiguracoesPage() {
 
         <TabsContent value="perfil">
           <Card><CardHeader><CardTitle>Meu Perfil</CardTitle></CardHeader><CardContent className="space-y-4">
-            {showAvatarUpload && (
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  {perfil.avatar ? (
-                    <img src={perfil.avatar.startsWith("/uploads") ? perfil.avatar : perfil.avatar} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-2 border-gray-300" />
-                  ) : (
-                    <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">{session?.user?.name?.charAt(0) || "U"}</div>
-                  )}
-                  <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 bg-white dark:bg-gray-700 rounded-full p-1.5 shadow-lg border hover:bg-gray-100" title="Alterar foto">
-                    <Camera className="h-4 w-4" />
-                  </button>
-                </div>
-                <div>
-                  <p className="font-medium">{perfil.nome}</p>
-                  <p className="text-sm text-gray-500">{perfil.email}</p>
-                  <Button variant="link" className="p-0 h-auto text-sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                    {uploading ? "A enviar..." : "Alterar foto"}
-                  </Button>
-                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
-                </div>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                {perfil.avatar ? (
+                  <img src={perfil.avatar.startsWith("/uploads") ? perfil.avatar : perfil.avatar} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-2 border-gray-300" />
+                ) : (
+                  <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">{session?.user?.name?.charAt(0) || "U"}</div>
+                )}
+                <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 bg-white dark:bg-gray-700 rounded-full p-1.5 shadow-lg border hover:bg-gray-100"><Camera className="h-4 w-4" /></button>
               </div>
-            )}
+              <div><p className="font-medium">{perfil.nome}</p><p className="text-sm text-gray-500">{perfil.email}</p><Button variant="link" className="p-0 h-auto text-sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>{uploading ? "A enviar..." : "Alterar foto"}</Button></div>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+            </div>
             <div><Label>Nome</Label><Input className="bg-gray-100 dark:bg-gray-700" value={perfil.nome} onChange={e => setPerfil({...perfil, nome: e.target.value})} /></div>
             <div><Label>Email</Label><Input className="bg-gray-100 dark:bg-gray-700" value={perfil.email} disabled /></div>
             <Button onClick={handleSavePerfil} className="bg-blue-600">Guardar Perfil</Button>
@@ -117,12 +99,11 @@ export default function ConfiguracoesPage() {
             </div>
             {podeEditarOficina && (
               <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div><Label>Tipo de Oficina</Label>
-                    <Select value={oficina.tipoOficina || "AMBOS"} onValueChange={v => setOficina({...oficina, tipoOficina: v})}>
-                      <SelectTrigger className="bg-gray-100 dark:bg-gray-700"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="CARROS">🚗 Carros</SelectItem><SelectItem value="MOTOS">🏍️ Motos</SelectItem><SelectItem value="AMBOS">🚗🏍️ Ambos</SelectItem></SelectContent>
-                    </Select>
+                <div className="border-t pt-4"><p className="font-semibold mb-2">🔗 Redes Sociais</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="flex items-center gap-2"><Facebook className="h-5 w-5 text-blue-600" /><Input className="bg-gray-100 dark:bg-gray-700" placeholder="Facebook" value={oficina.facebook || ""} onChange={e => setOficina({...oficina, facebook: e.target.value})} /></div>
+                    <div className="flex items-center gap-2"><Instagram className="h-5 w-5 text-pink-600" /><Input className="bg-gray-100 dark:bg-gray-700" placeholder="Instagram" value={oficina.instagram || ""} onChange={e => setOficina({...oficina, instagram: e.target.value})} /></div>
+                    <div className="flex items-center gap-2"><Music className="h-5 w-5 text-black dark:text-white" /><Input className="bg-gray-100 dark:bg-gray-700" placeholder="TikTok" value={oficina.tiktok || ""} onChange={e => setOficina({...oficina, tiktok: e.target.value})} /></div>
                   </div>
                 </div>
                 <div className="border-t pt-4"><p className="font-semibold mb-2">📍 Localização para Ponto</p>
@@ -141,21 +122,16 @@ export default function ConfiguracoesPage() {
         <TabsContent value="addons">
           <Card><CardHeader><CardTitle>Módulos Adicionais</CardTitle></CardHeader><CardContent className="space-y-4">
             {[
-              { key: "ponto", icon: Clock, color: "text-blue-500", label: "Ponto Eletrónico", desc: "Registo de entrada/saída dos funcionários" },
+              { key: "ponto", icon: Clock, color: "text-blue-500", label: "Ponto Eletrónico", desc: "Registo de entrada/saída" },
               { key: "whatsapp", icon: MessageCircle, color: "text-green-500", label: "WhatsApp", desc: "Notificações via WhatsApp" },
               { key: "sms", icon: Bell, color: "text-yellow-500", label: "SMS", desc: "Notificações via SMS" },
-              { key: "gps", icon: MapPin, color: "text-blue-500", label: "GPS Autotrack", desc: "Rastreamento de veículos em tempo real" },
-              { key: "pontos", icon: Star, color: "text-yellow-500", label: "Programa de Fidelidade", desc: "Recompensas para clientes" },
-              { key: "portal", icon: Globe, color: "text-purple-500", label: "Portal do Cliente", desc: "Acesso para clientes acompanharem as OS" }
+              { key: "gps", icon: MapPin, color: "text-blue-500", label: "GPS Autotrack", desc: "Rastreamento em tempo real" },
+              { key: "pontos", icon: Star, color: "text-yellow-500", label: "Fidelidade", desc: "Recompensas para clientes" },
+              { key: "portal", icon: Globe, color: "text-purple-500", label: "Portal do Cliente", desc: "Acompanhamento de OS" }
             ].map(a => (
               <div key={a.key} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 <div className="flex items-center gap-3"><a.icon className={`h-6 w-6 ${a.color}`} /><div><p className="font-medium">{a.label}</p><p className="text-sm text-gray-500">{a.desc}</p></div></div>
-                <Switch
-                  checked={addons[a.key] || false}
-                  onCheckedChange={podeEditarAddons ? (v: boolean) => setAddons({...addons, [a.key]: v}) : undefined}
-                  disabled={!podeEditarAddons}
-                  className={!podeEditarAddons ? "opacity-50 cursor-not-allowed" : ""}
-                />
+                <Switch checked={addons[a.key] || false} onCheckedChange={podeEditarAddons ? (v: boolean) => setAddons({...addons, [a.key]: v}) : undefined} disabled={!podeEditarAddons} className={!podeEditarAddons ? "opacity-50 cursor-not-allowed" : ""} />
               </div>
             ))}
             {podeEditarAddons && <Button onClick={handleSaveAddons} className="bg-blue-600 mt-4">Guardar Configurações</Button>}

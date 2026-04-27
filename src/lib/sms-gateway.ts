@@ -1,3 +1,5 @@
+import { prisma } from "@/lib/prisma";
+
 const BASE_URL = process.env.SMS_GATEWAY_URL || "http://localhost:8082";
 const TOKEN = process.env.SMS_GATEWAY_TOKEN || "";
 
@@ -18,14 +20,8 @@ export async function enviarSMS(telefone: string, mensagem: string): Promise<Sms
   try {
     const res = await fetch(`${BASE_URL}/`, {
       method: "POST",
-      headers: {
-        "Authorization": TOKEN,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        to: numeroFormatado,
-        message: mensagem,
-      }),
+      headers: { "Authorization": TOKEN, "Content-Type": "application/json" },
+      body: JSON.stringify({ to: numeroFormatado, message: mensagem }),
     });
 
     if (!res.ok) {
@@ -47,15 +43,22 @@ export async function notificarMudancaEstadoOS(
   nomeCliente: string,
   status: string,
   numeroOS: number,
-  oficinaNome: string = "AutoTrack"
+  tenantId: string
 ): Promise<SmsResult> {
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  const oficinaNome = tenant?.nome || "AutoTrack";
+  const oficinaTelefone = tenant?.telefone ? ` | Tel: ${tenant.telefone}` : "";
+  const oficinaMorada = tenant?.endereco ? ` | ${tenant.endereco}` : "";
+  const redes = [tenant?.facebook, tenant?.instagram, tenant?.tiktok].filter(Boolean).join(" | ");
+  const rodapeRedes = redes ? ` | ${redes}` : "";
+
   const mensagens: Record<string, string> = {
-    PRONTA: `${oficinaNome}: ${nomeCliente}, a sua viatura da OS #${numeroOS} está pronta para levantamento.`,
-    ENTREGUE: `${oficinaNome}: ${nomeCliente}, a OS #${numeroOS} foi entregue. Obrigado pela confiança!`,
-    ABERTA: `${oficinaNome}: ${nomeCliente}, a sua OS #${numeroOS} foi aberta. Entraremos em contacto brevemente.`,
+    PRONTA: `${oficinaNome}: ${nomeCliente}, a sua OS #${numeroOS} está pronta.${oficinaTelefone}${oficinaMorada}${rodapeRedes}`,
+    ENTREGUE: `${oficinaNome}: ${nomeCliente}, a OS #${numeroOS} foi entregue. Obrigado!${oficinaTelefone}${oficinaMorada}${rodapeRedes}`,
+    ABERTA: `${oficinaNome}: ${nomeCliente}, a sua OS #${numeroOS} foi aberta.${oficinaTelefone}${oficinaMorada}${rodapeRedes}`,
   };
 
-  const mensagem = mensagens[status] || `${oficinaNome}: ${nomeCliente}, a sua OS #${numeroOS} mudou para o estado "${status}".`;
+  const mensagem = mensagens[status] || `${oficinaNome}: ${nomeCliente}, a sua OS #${numeroOS} mudou para "${status}".${oficinaTelefone}${oficinaMorada}${rodapeRedes}`;
 
   return enviarSMS(telefoneCliente, mensagem);
 }
