@@ -17,19 +17,24 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [tipoOficina, setTipoOficina] = useState("AMBOS");
+  const [alertasCount, setAlertasCount] = useState(0);
 
   useEffect(() => {
     if (!session) return;
     fetch("/api/configuracoes")
       .then(r => r.json())
-      .then(d => {
-        if (d.oficina?.tipoOficina) setTipoOficina(d.oficina.tipoOficina);
-      })
+      .then(d => { if (d.oficina?.tipoOficina) setTipoOficina(d.oficina.tipoOficina); })
       .catch(() => {});
+
+    if (session.user.nivel === "SUPER_ADMIN") {
+      fetch("/api/alertas?resolvido=false&limit=5")
+        .then(r => r.json())
+        .then(d => setAlertasCount(Array.isArray(d) ? d.length : d.total || 0))
+        .catch(() => setAlertasCount(0));
+    }
   }, [session]);
 
   const isActive = (path: string) => pathname?.startsWith(path);
-
   const handleLogout = () => signOut({ callbackUrl: window.location.origin });
 
   const getVeiculoIcon = () => {
@@ -37,6 +42,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
     if (tipoOficina === "MOTOS") return Bike;
     return Car;
   };
+
+  const nivel = session?.user?.nivel || "";
 
   const navItems = [
     { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
@@ -52,10 +59,13 @@ export default function Sidebar({ onClose }: SidebarProps) {
   ];
 
   const adminItems = [
-    { href: "/auditoria", label: "Auditoria", icon: ShieldCheck },
-    { href: "/alertas", label: "Alertas", icon: Bell },
     { href: "/usuarios", label: "Utilizadores", icon: Users },
     { href: "/configuracoes", label: "Configurações", icon: Settings },
+  ];
+
+  const auditoriaItems = [
+    { href: "/auditoria", label: "Auditoria", icon: ShieldCheck },
+    { href: "/alertas", label: "Alertas", icon: Bell, badge: alertasCount },
   ];
 
   const superAdminItems = [
@@ -95,13 +105,21 @@ export default function Sidebar({ onClose }: SidebarProps) {
         ))}
 
         <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700" />
-        {adminItems.map(item => (
+
+        {(nivel === "ADMIN" || nivel === "SUPER_ADMIN") && adminItems.map(item => (
           <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium", isActive(item.href) ? "bg-blue-900 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 hover:text-white")}>
             <item.icon size={18} />{item.label}
           </Link>
         ))}
 
-        {session?.user?.nivel === "SUPER_ADMIN" && (
+        {(nivel === "ADMIN" || nivel === "SUPER_ADMIN") && auditoriaItems.map(item => (
+          <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium", isActive(item.href) ? "bg-blue-900 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 hover:text-white")}>
+            <item.icon size={18} />{item.label}
+            {item.badge != null && item.badge > 0 && <span className="ml-auto bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">{item.badge}</span>}
+          </Link>
+        ))}
+
+        {nivel === "SUPER_ADMIN" && (
           <>
             <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700" />
             <p className="px-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Super Admin</p>
