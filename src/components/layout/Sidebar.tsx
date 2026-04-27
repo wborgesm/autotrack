@@ -58,16 +58,18 @@ export default function Sidebar({ onClose }: SidebarProps) {
     { href: "/orcamentos", label: "Orçamentos", icon: FileText },
   ];
 
+  // Itens de admin (visíveis para ADMIN e SUPER_ADMIN)
   const adminItems = [
     { href: "/usuarios", label: "Utilizadores", icon: Users },
-    { href: "/configuracoes", label: "Configurações", icon: Settings },
   ];
 
+  // Itens de auditoria (visíveis para ADMIN e SUPER_ADMIN)
   const auditoriaItems = [
     { href: "/auditoria", label: "Auditoria", icon: ShieldCheck },
     { href: "/alertas", label: "Alertas", icon: Bell, badge: alertasCount },
   ];
 
+  // Itens exclusivos do SUPER_ADMIN
   const superAdminItems = [
     { href: "/tenants", label: "Empresas", icon: Building },
     { href: "/configuracoes/notificacoes", label: "Notificações", icon: Bell },
@@ -106,12 +108,21 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
         <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700" />
 
+        {/* Configurações visível para TODOS exceto CLIENTE */}
+        {(nivel !== "CLIENTE" && nivel !== "") && (
+          <Link href="/configuracoes" className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium", isActive("/configuracoes") ? "bg-blue-900 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 hover:text-white")}>
+            <Settings size={18} />Configurações
+          </Link>
+        )}
+
+        {/* Admin items (ADMIN e SUPER_ADMIN) */}
         {(nivel === "ADMIN" || nivel === "SUPER_ADMIN") && adminItems.map(item => (
           <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium", isActive(item.href) ? "bg-blue-900 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 hover:text-white")}>
             <item.icon size={18} />{item.label}
           </Link>
         ))}
 
+        {/* Auditoria (ADMIN e SUPER_ADMIN) */}
         {(nivel === "ADMIN" || nivel === "SUPER_ADMIN") && auditoriaItems.map(item => (
           <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium", isActive(item.href) ? "bg-blue-900 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 hover:text-white")}>
             <item.icon size={18} />{item.label}
@@ -119,6 +130,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
           </Link>
         ))}
 
+        {/* SUPER_ADMIN items */}
         {nivel === "SUPER_ADMIN" && (
           <>
             <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700" />
