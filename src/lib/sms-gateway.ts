@@ -1,11 +1,3 @@
-/**
- * Envia SMS através do Traccar SMS Gateway (telemóvel Android na rede local).
- *
- * Pré‑requisitos:
- * - Ter a app Traccar SMS Gateway instalada e o serviço local ativo.
- * - Configurar SMS_GATEWAY_URL e SMS_GATEWAY_TOKEN no .env
- */
-
 const BASE_URL = process.env.SMS_GATEWAY_URL || "http://localhost:8082";
 const TOKEN = process.env.SMS_GATEWAY_TOKEN || "";
 
@@ -21,7 +13,6 @@ export async function enviarSMS(telefone: string, mensagem: string): Promise<Sms
     return { success: false, error: "Token em falta" };
   }
 
-  // Garantir que o número está em formato internacional (ex: +351...)
   const numeroFormatado = telefone.startsWith("+") ? telefone : `+351${telefone.replace(/^0+/, "")}`;
 
   try {
@@ -51,22 +42,20 @@ export async function enviarSMS(telefone: string, mensagem: string): Promise<Sms
   }
 }
 
-/**
- * Dispara notificação de alteração de estado de uma OS.
- */
 export async function notificarMudancaEstadoOS(
   telefoneCliente: string,
   nomeCliente: string,
   status: string,
-  numeroOS: number
+  numeroOS: number,
+  oficinaNome: string = "AutoTrack"
 ): Promise<SmsResult> {
   const mensagens: Record<string, string> = {
-    PRONTA: `AutoTrack: ${nomeCliente}, a sua viatura da OS #${numeroOS} está pronta para levantamento.`,
-    ENTREGUE: `AutoTrack: ${nomeCliente}, a OS #${numeroOS} foi entregue. Obrigado pela confiança!`,
-    ABERTA: `AutoTrack: ${nomeCliente}, a sua OS #${numeroOS} foi aberta. Entraremos em contacto brevemente.`,
+    PRONTA: `${oficinaNome}: ${nomeCliente}, a sua viatura da OS #${numeroOS} está pronta para levantamento.`,
+    ENTREGUE: `${oficinaNome}: ${nomeCliente}, a OS #${numeroOS} foi entregue. Obrigado pela confiança!`,
+    ABERTA: `${oficinaNome}: ${nomeCliente}, a sua OS #${numeroOS} foi aberta. Entraremos em contacto brevemente.`,
   };
 
-  const mensagem = mensagens[status] || `AutoTrack: ${nomeCliente}, a sua OS #${numeroOS} mudou para o estado "${status}".`;
+  const mensagem = mensagens[status] || `${oficinaNome}: ${nomeCliente}, a sua OS #${numeroOS} mudou para o estado "${status}".`;
 
   return enviarSMS(telefoneCliente, mensagem);
 }

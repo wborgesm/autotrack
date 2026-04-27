@@ -54,7 +54,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const deveCreditarPontos = novoStatus === "ENTREGUE" && statusAnterior !== "ENTREGUE";
 
     const ordem = await prisma.$transaction(async (tx: any) => {
-      // Auditoria imutável: registar alterações de valores críticos
       if (validated.total !== undefined || validated.desconto !== undefined || validated.pago !== undefined) {
         await tx.auditoriaOS.create({
           data: {
@@ -81,16 +80,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return updated;
     });
 
-    // Verificar fraudes após alteração
     verificarFraudes(tenantId, session.user.id).catch(console.error);
 
     if (deveCreditarPontos && ordemAtual.tenant.addonPontos) {
       try { await creditarPontos({ tenant: ordemAtual.tenant, clienteId: ordemAtual.clienteId, valorTotal: ordem.total.toNumber(), tipoVeiculo: ordemAtual.veiculo.tipo, ordemId: ordem.id }); } catch (error) { console.error("Erro ao creditar pontos:", error); }
     }
 
+    const oficinaNome = ordemAtual.tenant.nome || "AutoTrack";
     if (novoStatus && (novoStatus === "PRONTA" || novoStatus === "ENTREGUE") && ordemAtual.cliente?.telefone) {
-      try { await notificarMudancaEstadoOS(ordemAtual.cliente.telefone, ordemAtual.cliente.nome, novoStatus, ordem.numero); } catch (e) { console.error(e); }
-      sendWhatsAppMessage(ordemAtual.cliente.telefone, `Olá ${ordemAtual.cliente.nome}, a sua OS #${ordem.numero} foi atualizada para ${novoStatus}.`).catch(console.error);
+      try { await notificarMudancaEstadoOS(ordemAtual.cliente.telefone, ordemAtual.cliente.nome, novoStatus, ordem.numero, oficinaNome); } catch (e) { console.error(e); }
+      sendWhatsAppMessage(ordemAtual.cliente.telefone, `${oficinaNome}: Olá ${ordemAtual.cliente.nome}, a sua OS #${ordem.numero} foi atualizada para ${novoStatus}.`).catch(console.error);
     }
 
     return NextResponse.json(ordem);
