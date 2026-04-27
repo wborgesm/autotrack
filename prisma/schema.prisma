@@ -603,3 +603,18 @@ model AlertaFraude {
   resolvido   Boolean  @default(false)
   createdAt   DateTime @default(now())
 }
+
+model AuditoriaOS {
+  id            String   @id @default(cuid())
+  osId          String
+  campo         String
+  valorAntes    String?
+  valorDepois   String?
+  utilizadorId  String
+  ip            String?
+  userAgent     String?
+  criadoEm      DateTime @default(now())
+
+  @@index([osId])
+  @@index([utilizadorId, criadoEm])
+}

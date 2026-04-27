@@ -1,6 +1,7 @@
 import { notificarMudancaEstadoOS } from "@/lib/sms-gateway";
 import { sendWhatsAppMessage } from "@/lib/whatsapp/client";
 import { verificarFraudes } from "@/lib/fraudes/detector";
+import { verificarTenantOS } from "@/lib/verificar-tenant";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -53,6 +54,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const deveCreditarPontos = novoStatus === "ENTREGUE" && statusAnterior !== "ENTREGUE";
 
     const ordem = await prisma.$transaction(async (tx: any) => {
+      // Auditoria imutável: registar alterações de valores críticos
+      if (validated.total !== undefined || validated.desconto !== undefined || validated.pago !== undefined) {
+        await tx.auditoriaOS.create({
+          data: {
+            osId: params.id,
+            campo: validated.total !== undefined ? "total" : validated.desconto !== undefined ? "desconto" : "pago",
+            valorAntes: validated.total !== undefined ? String(ordemAtual.total) : validated.desconto !== undefined ? String(ordemAtual.desconto) : String(ordemAtual.pago),
+            valorDepois: String(validated.total ?? validated.desconto ?? validated.pago),
+            utilizadorId: session.user.id,
+            ip: req.headers.get("x-forwarded-for") || undefined,
+            userAgent: req.headers.get("user-agent") || undefined,
+          },
+        });
+      }
+
       const updated = await tx.ordemServico.update({
         where: { id: params.id },
         data: { ...validated, dataEntrega: validated.dataEntrega ? new Date(validated.dataEntrega) : undefined },
@@ -65,8 +81,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return updated;
     });
 
-    // Verificar fraudes após alteração de status (executa em background)
-    verificarFraudes(tenantId).catch(console.error);
+    // Verificar fraudes após alteração
+    verificarFraudes(tenantId, session.user.id).catch(console.error);
 
     if (deveCreditarPontos && ordemAtual.tenant.addonPontos) {
       try { await creditarPontos({ tenant: ordemAtual.tenant, clienteId: ordemAtual.clienteId, valorTotal: ordem.total.toNumber(), tipoVeiculo: ordemAtual.veiculo.tipo, ordemId: ordem.id }); } catch (error) { console.error("Erro ao creditar pontos:", error); }
