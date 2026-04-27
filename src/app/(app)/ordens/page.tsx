@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Eye } from "lucide-react";
-import { formatCurrency, formatDate, getStatusColor, getStatusLabel } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default function OrdensPage() {
   const { data: session } = useSession();
@@ -19,56 +18,27 @@ export default function OrdensPage() {
   const [clientes, setClientes] = useState<any[]>([]);
   const [veiculos, setVeiculos] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({
-    clienteId: "",
-    veiculoId: "",
-    tecnicoId: "",
-    kmEntrada: "",
-    relatoCliente: "",
-    dataPrevista: "",
-  });
-  const [errorMsg, setErrorMsg] = useState("");
+  const [form, setForm] = useState({ clienteId: "", veiculoId: "", observacoes: "" });
 
-  const fetchData = async () => {
-    const [oRes, cRes, vRes] = await Promise.all([
-      fetch("/api/ordens"),
-      fetch("/api/clientes?limit=100"),
-      fetch("/api/veiculos"),
-    ]);
-    setOrdens((await oRes.json()).data);
-    setClientes((await cRes.json()).data);
-    setVeiculos(await vRes.json());
+  const fetchOrdens = () => {
+    fetch("/api/ordens")
+      .then(r => r.json())
+      .then(d => setOrdens(Array.isArray(d) ? d : []))
+      .catch(() => setOrdens([]));
   };
+  const fetchClientes = () => fetch("/api/clientes?limit=100").then(r => r.json()).then(d => setClientes(Array.isArray(d.data) ? d.data : [])).catch(() => setClientes([]));
+  const fetchVeiculos = () => fetch("/api/veiculos").then(r => r.json()).then(d => setVeiculos(Array.isArray(d) ? d : [])).catch(() => setVeiculos([]));
 
-  useEffect(() => { if (session) fetchData(); }, [session]);
+  useEffect(() => { if (session) { fetchOrdens(); fetchClientes(); fetchVeiculos(); } }, [session]);
 
-  const handleSubmit = async () => {
-    setErrorMsg("");
-    if (!form.clienteId || !form.veiculoId) {
-      setErrorMsg("Cliente e veículo são obrigatórios.");
-      return;
-    }
-    const payload: any = {
-      clienteId: form.clienteId,
-      veiculoId: form.veiculoId,
-      tecnicoId: form.tecnicoId || undefined,
-      kmEntrada: form.kmEntrada ? parseInt(form.kmEntrada) : undefined,
-      relatoCliente: form.relatoCliente,
-      dataPrevista: form.dataPrevista ? new Date(form.dataPrevista).toISOString() : undefined,
-    };
+  const handleCreate = async () => {
     const res = await fetch("/api/ordens", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(form),
     });
-    if (res.ok) {
-      setDialogOpen(false);
-      setForm({ clienteId: "", veiculoId: "", tecnicoId: "", kmEntrada: "", relatoCliente: "", dataPrevista: "" });
-      fetchData();
-    } else {
-      const err = await res.json();
-      setErrorMsg(err.error || "Erro ao criar OS");
-    }
+    if (res.ok) { setDialogOpen(false); setForm({ clienteId: "", veiculoId: "", observacoes: "" }); fetchOrdens(); }
+    else { const err = await res.json(); alert(err.error || "Erro"); }
   };
 
   return (
@@ -76,34 +46,62 @@ export default function OrdensPage() {
       <div className="flex justify-between">
         <h1 className="text-2xl font-bold">Ordens de Serviço</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4"/>Nova OS</Button></DialogTrigger>
-          <DialogContent className="max-w-2xl" aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
+          <DialogTrigger asChild><Button className="bg-blue-600"><Plus className="mr-2 h-4 w-4"/> Nova OS</Button></DialogTrigger>
+          <DialogContent aria-describedby="ordens-form-desc">
+            <p id="ordens-form-desc" className="hidden">Formulário de nova OS</p>
             <DialogHeader><DialogTitle>Nova Ordem de Serviço</DialogTitle></DialogHeader>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2"><Label>Cliente *</Label>
-                <Select onValueChange={v => { setForm({...form, clienteId: v}); const veics = veiculos.filter(ve => ve.clienteId === v); if (veics.length === 1) setForm(f => ({...f, veiculoId: veics[0].id})); }}>
+            <div className="grid gap-4">
+              <div><Label>Cliente</Label>
+                <Select onValueChange={v => setForm({...form, clienteId: v})}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>{clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
+                  <SelectContent>{clientes.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2"><Label>Veículo *</Label>
-                <Select value={form.veiculoId} onValueChange={v => setForm({...form, veiculoId: v})} disabled={!form.clienteId}>
+              <div><Label>Veículo</Label>
+                <Select onValueChange={v => setForm({...form, veiculoId: v})}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>{veiculos.filter(v => v.clienteId === form.clienteId).map(v => <SelectItem key={v.id} value={v.id}>{v.placa} - {v.modelo}</SelectItem>)}</SelectContent>
+                  <SelectContent>{veiculos.map((v: any) => <SelectItem key={v.id} value={v.id}>{v.placa} - {v.modelo}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>KM Entrada</Label><Input type="number" value={form.kmEntrada} onChange={e => setForm({...form, kmEntrada: e.target.value})} /></div>
-              <div><Label>Data Prevista</Label><Input type="date" value={form.dataPrevista} onChange={e => setForm({...form, dataPrevista: e.target.value})} /></div>
-              <div className="col-span-2"><Label>Relato do Cliente</Label><Input value={form.relatoCliente} onChange={e => setForm({...form, relatoCliente: e.target.value})} /></div>
+              <div><Label>Observações</Label><Input value={form.observacoes} onChange={e => setForm({...form, observacoes: e.target.value})} /></div>
+              <Button onClick={handleCreate} className="bg-green-600">Criar OS</Button>
             </div>
-            {errorMsg && <p className="text-red-500 text-sm mt-2">{errorMsg}</p>}
-            <Button onClick={handleSubmit} className="mt-4">Criar OS</Button>
           </DialogContent>
         </Dialog>
       </div>
-      <Card><CardHeader><CardTitle>Ordens Recentes</CardTitle></CardHeader>
-      <CardContent><Table><TableHeader><TableRow><TableHead>Nº</TableHead><TableHead>Cliente</TableHead><TableHead>Veículo</TableHead><TableHead>Entrada</TableHead><TableHead>Status</TableHead><TableHead>Total</TableHead><TableHead></TableHead></TableRow></TableHeader>
-      <TableBody>{ordens.map(o => (<TableRow key={o.id}><TableCell>#{o.numero}</TableCell><TableCell>{o.cliente?.nome}</TableCell><TableCell>{o.veiculo?.placa}</TableCell><TableCell>{formatDate(o.dataEntrada)}</TableCell><TableCell><Badge className={getStatusColor(o.status)}>{getStatusLabel(o.status)}</Badge></TableCell><TableCell>{formatCurrency(o.total)}</TableCell><TableCell><Link href={`/ordens/${o.id}`}><Button size="sm" variant="outline"><Eye className="h-4 w-4 mr-1"/>Ver</Button></Link></TableCell></TableRow>))}</TableBody></Table></CardContent></Card>
+      <Card>
+        <CardHeader><CardTitle>Lista de Ordens</CardTitle></CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader><TableRow><TableHead>Nº</TableHead><TableHead>Cliente</TableHead><TableHead>Veículo</TableHead><TableHead>Total</TableHead><TableHead>Status</TableHead><TableHead>Data</TableHead><TableHead>Ações</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {ordens.map((o: any) => (
+                <TableRow key={o.id}>
+                  <TableCell>#{o.numero}</TableCell>
+                  <TableCell>{o.cliente?.nome}</TableCell>
+                  <TableCell>{o.veiculo?.placa}</TableCell>
+                  <TableCell>{formatCurrency(o.total)}</TableCell>
+                  <TableCell>{o.status}</TableCell>
+                  <TableCell>{formatDate(o.createdAt)}</TableCell>
+                  <TableCell>
+                    <Link href={`/ordens/${o.id}`}><Button size="sm" variant="outline"><Eye className="h-4 w-4"/></Button></Link>
+                    {o.status !== "ENTREGUE" && o.status !== "CANCELADA" && (
+                      <Button size="sm" variant="outline" className="ml-2 bg-green-700 text-white" onClick={async () => {
+                        const res = await fetch(`/api/ordens/${o.id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ status: "PRONTA" }),
+                        });
+                        if (res.ok) fetchOrdens();
+                      }}>Concluir</Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

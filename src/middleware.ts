@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
   // Rotas públicas (não precisam de autenticação)
   if (
     path.startsWith("/api/auth") ||
-    path.startsWith("/api/health") ||  // ← adicionado
+    path.startsWith("/api/health") ||
     path.startsWith("/login") ||
     path === "/" ||
     path.startsWith("/_next") ||
@@ -31,17 +31,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // ADMIN não pode aceder à auditoria
-  if (path.startsWith("/auditoria") || path.startsWith("/api/auditoria")) {
+  // ADMIN não pode aceder a /tenants (gestão de empresas)
+  if (path.startsWith("/tenants") || path.startsWith("/api/tenants")) {
     if (path.startsWith("/api/")) {
       return NextResponse.json({ error: "Acesso restrito ao SUPER_ADMIN" }, { status: 403 });
     }
     return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  // ADMIN não pode gerir tenants (se esta rota existir)
-  if (path.startsWith("/api/tenants") && token.nivel as string !== "SUPER_ADMIN") {
-    return NextResponse.json({ error: "Acesso restrito ao SUPER_ADMIN" }, { status: 403 });
   }
 
   return NextResponse.next();

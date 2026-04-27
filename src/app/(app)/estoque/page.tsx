@@ -256,7 +256,7 @@ export default function EstoquePage() {
   if (loading) return <div className="p-6 text-gray-900 dark:text-gray-200">A carregar...</div>;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 text-gray-900 dark:text-gray-100">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Stock</h1>
         <div className="flex gap-2">
@@ -266,7 +266,8 @@ export default function EstoquePage() {
               <DialogTrigger asChild>
                 <Button className="bg-blue-600 hover:bg-blue-700"><Plus className="mr-2 h-4 w-4" /> Nova Peça</Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
+              <DialogContent aria-describedby="peca-form-desc" className="max-w-3xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <p id="peca-form-desc" className="hidden">Formulário de cadastro de peça</p>
                 <DialogHeader><DialogTitle className="text-gray-900 dark:text-white">Cadastrar Peça</DialogTitle></DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -384,7 +385,8 @@ export default function EstoquePage() {
       {/* Modal de Edição */}
       {podeEditar && (
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="max-w-3xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
+          <DialogContent aria-describedby="edit-form-desc" className="max-w-3xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <p id="edit-form-desc" className="hidden">Formulário de edição de peça</p>
             <DialogHeader><DialogTitle className="text-gray-900 dark:text-white">Editar Peça - {selectedPeca?.nome}</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
@@ -432,7 +434,8 @@ export default function EstoquePage() {
       {/* Modal de Movimentação */}
       {podeEditar && (
         <Dialog open={movDialogOpen} onOpenChange={setMovDialogOpen}>
-          <DialogContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" aria-describedby="dialog-desc"><p id="dialog-desc" className="hidden">Formulário</p>
+          <DialogContent aria-describedby="mov-form-desc" className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <p id="mov-form-desc" className="hidden">Formulário de movimentação de stock</p>
             <DialogHeader><DialogTitle className="text-gray-900 dark:text-white">Movimentar Stock - {selectedPeca?.nome}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div><Label className="text-gray-700 dark:text-gray-300">Tipo</Label>

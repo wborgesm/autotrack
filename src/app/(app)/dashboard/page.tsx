@@ -2,10 +2,9 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Activity, DollarSign, Users, Wrench } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { Wrench, DollarSign, Users, Package, TrendingUp, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 const statusColors: Record<string, string> = {
@@ -15,10 +14,16 @@ const statusColors: Record<string, string> = {
   EM_SERVICO: "#10b981",
   TESTE_FINAL: "#06b6d4",
   PRONTA: "#84cc16",
-  FINALIZADA: "#6b7280",
   ENTREGUE: "#059669",
   CANCELADA: "#ef4444",
 };
+
+const kpiGradients = [
+  "from-blue-500 to-blue-600",
+  "from-emerald-500 to-emerald-600",
+  "from-violet-500 to-violet-600",
+  "from-amber-500 to-amber-600",
+];
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -68,108 +73,153 @@ export default function DashboardPage() {
     color: statusColors[item.status] || "#6b7280",
   }));
 
-  if (loading) return <div className="p-6 text-center">A carregar...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+  );
+
+  const kpis = [
+    { label: "Ordens em Aberto", value: kpi.ordens, icon: Wrench, gradient: kpiGradients[0] },
+    { label: "Receita do Mês", value: formatCurrency(kpi.receita), icon: DollarSign, gradient: kpiGradients[1] },
+    { label: "Total de Clientes", value: kpi.clientes, icon: Users, gradient: kpiGradients[2] },
+    { label: "Peças em Stock", value: kpi.pecas, icon: Package, gradient: kpiGradients[3] },
+  ];
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+      {/* Cabeçalho */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Visão geral da sua oficina</p>
+        </div>
+        <Badge variant="outline" className="w-fit">
+          <TrendingUp className="h-4 w-4 mr-2" />
+          {new Date().toLocaleDateString("pt-PT", { month: "long", year: "numeric" })}
+        </Badge>
+      </div>
+
+      {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ordens em aberto</CardTitle>
-            <Wrench className="h-4 w-4 text-muted-foreground" />
+        {kpis.map((item, idx) => (
+          <Card key={idx} className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div className={`bg-gradient-to-r ${item.gradient} p-4 text-white`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium opacity-90">{item.label}</p>
+                  <p className="text-2xl font-bold mt-1">{item.value}</p>
+                </div>
+                <div className="bg-white/20 rounded-full p-3">
+                  <item.icon className="h-6 w-6" />
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-lg border-0">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+              Receita por Dia (Mês Atual)
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpi.ordens}</div>
+            {receitaMensal.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                <DollarSign className="h-12 w-12 mb-2" />
+                <p>Sem dados de receita este mês</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={receitaMensal} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="dia" tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                    formatter={(value: number) => [formatCurrency(value), "Receita"]}
+                  />
+                  <Bar dataKey="receita" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Receita do mês</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+
+        <Card className="shadow-lg border-0">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <div className="h-5 w-5 rounded-full bg-blue-600" />
+              Status das Ordens
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(kpi.receita)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Clientes</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{kpi.clientes}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Peças em stock</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{kpi.pecas}</div>
+            {statusData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                <Wrench className="h-12 w-12 mb-2" />
+                <p>Nenhuma ordem registada</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={50} paddingAngle={3} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                    {statusData.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader><CardTitle>Receita por dia (mês atual)</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={receitaMensal}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="dia" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="receita" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle>Status das Ordens</CardTitle></CardHeader>
-          <CardContent className="flex justify-center">
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                  {statusData.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-      <Card>
-        <CardHeader><CardTitle>Últimas ordens</CardTitle></CardHeader>
+
+      {/* Últimas Ordens */}
+      <Card className="shadow-lg border-0">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-semibold">Últimas Ordens de Serviço</CardTitle>
+        </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nº</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Data</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          {ultimasOrdens.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <Wrench className="h-12 w-12 mx-auto mb-2" />
+              <p>Nenhuma ordem recente</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
               {ultimasOrdens.map((os: any) => (
-                <TableRow key={os.id}>
-                  <TableCell className="font-medium">#{os.numero || os.id}</TableCell>
-                  <TableCell>{os.cliente?.nome}</TableCell>
-                  <TableCell>{formatCurrency(os.total)}</TableCell>
-                  <TableCell>
-                    <Badge style={{ backgroundColor: statusColors[os.status] || "#6b7280" }}>{os.status}</Badge>
-                  </TableCell>
-                  <TableCell>{new Date(os.createdAt).toLocaleDateString("pt-PT")}</TableCell>
-                </TableRow>
+                <div key={os.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors duration-200">
+                  <div className="flex items-center gap-4 mb-2 sm:mb-0">
+                    <div className="bg-blue-100 dark:bg-blue-900 rounded-full p-2">
+                      <Wrench className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        #{os.numero || os.id.slice(-6)} — {os.cliente?.nome || "Cliente"}
+                      </p>
+                      <p className="text-sm text-gray-500">{os.veiculo?.placa || "Sem veículo"} • {os.veiculo?.modelo || ""}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <p className="font-bold text-gray-900 dark:text-white">{formatCurrency(os.total)}</p>
+                    <Badge style={{ backgroundColor: statusColors[os.status] || "#6b7280", color: "#fff" }}>
+                      {os.status === "ENTREGUE" ? "✅ Entregue" :
+                       os.status === "PRONTA" ? "✅ Pronta" :
+                       os.status === "CANCELADA" ? "❌ Cancelada" :
+                       os.status}
+                    </Badge>
+                    <p className="text-xs text-gray-400">{formatDate(os.createdAt)}</p>
+                  </div>
+                </div>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

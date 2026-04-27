@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard, Calendar, ClipboardList, Users, Car, Wrench,
-  Package, DollarSign, BarChart3, ShieldCheck, FileText, Settings, MapPin, Star, LogOut, X,
+  Package, DollarSign, BarChart3, ShieldCheck, FileText, Settings, MapPin, Star, LogOut, X, Building, Bell, MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +35,9 @@ export default function Sidebar({ onClose }: SidebarProps) {
     { href: "/auditoria", label: "Auditoria", icon: ShieldCheck },
     { href: "/usuarios", label: "Utilizadores", icon: Users },
     { href: "/configuracoes", label: "Configurações", icon: Settings },
+    { href: "/tenants", label: "Empresas", icon: Building },
+    { href: "/configuracoes/notificacoes", label: "Notificações", icon: Bell },
+    { href: "/configuracoes/whatsapp", label: "WhatsApp", icon: MessageCircle },
   ];
 
   const addonItems = [];
