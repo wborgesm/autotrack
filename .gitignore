@@ -6,3 +6,4 @@ scripts/
 scripts/
 *.deb
 uploads/
+.wwebjs_auth/

@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard, Calendar, ClipboardList, Users, Car, Wrench,
-  Package, DollarSign, BarChart3, ShieldCheck, FileText, Settings, MapPin, Star, LogOut, X, Building, Bell, MessageCircle,
+  Package, DollarSign, BarChart3, ShieldCheck, FileText, Settings, MapPin, Star, LogOut, X,
+  Building, Bell, MessageCircle, Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,9 @@ export default function Sidebar({ onClose }: SidebarProps) {
     { href: "/alertas", label: "Alertas", icon: Bell },
     { href: "/usuarios", label: "Utilizadores", icon: Users },
     { href: "/configuracoes", label: "Configurações", icon: Settings },
+  ];
+
+  const superAdminItems = [
     { href: "/tenants", label: "Empresas", icon: Building },
     { href: "/configuracoes/notificacoes", label: "Notificações", icon: Bell },
     { href: "/configuracoes/whatsapp", label: "WhatsApp", icon: MessageCircle },
@@ -60,9 +64,14 @@ export default function Sidebar({ onClose }: SidebarProps) {
             <item.icon size={18} />{item.label}
           </Link>
         ))}
-        {(adminItems.length > 0 || addonItems.length > 0) && <div className="pt-4 mt-4 border-t border-gray-700" />}
+        {(adminItems.length > 0 || superAdminItems.length > 0) && <div className="pt-4 mt-4 border-t border-gray-700" />}
         {adminItems.map(item => (
           <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium", isActive(item.href) ? "bg-blue-900 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 hover:text-white")}>
+            <item.icon size={18} />{item.label}
+          </Link>
+        ))}
+        {session?.user?.nivel === "SUPER_ADMIN" && superAdminItems.map(item => (
+          <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium", isActive(item.href) ? "bg-purple-900 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-700 hover:text-white")}>
             <item.icon size={18} />{item.label}
           </Link>
         ))}
