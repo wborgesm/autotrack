@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Car, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Car, CheckCircle, XCircle, KeyRound } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default function AlugueresPage() {

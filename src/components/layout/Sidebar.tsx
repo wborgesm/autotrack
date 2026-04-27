@@ -6,25 +6,44 @@ import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard, Calendar, ClipboardList, Users, Car, Wrench,
   Package, DollarSign, BarChart3, ShieldCheck, FileText, Settings, MapPin, Star, LogOut, X,
-  Building, Bell, MessageCircle, Clock
+  Building, Bell, MessageCircle, Clock, KeyRound, Bike
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 interface SidebarProps { onClose?: () => void; }
 
 export default function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [tipoOficina, setTipoOficina] = useState("AMBOS");
+
+  useEffect(() => {
+    if (!session) return;
+    fetch("/api/configuracoes")
+      .then(r => r.json())
+      .then(d => {
+        if (d.oficina?.tipoOficina) setTipoOficina(d.oficina.tipoOficina);
+      })
+      .catch(() => {});
+  }, [session]);
+
   const isActive = (path: string) => pathname?.startsWith(path);
 
   const handleLogout = () => signOut({ callbackUrl: window.location.origin });
+
+  const getVeiculoIcon = () => {
+    if (tipoOficina === "CARROS") return Car;
+    if (tipoOficina === "MOTOS") return Bike;
+    return Car;
+  };
 
   const navItems = [
     { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
     { href: "/agenda", label: "Agenda", icon: Calendar },
     { href: "/ordens", label: "Ordens", icon: ClipboardList },
     { href: "/clientes", label: "Clientes", icon: Users },
-    { href: "/veiculos", label: "Veículos", icon: Car },
+    { href: "/veiculos", label: "Veículos", icon: getVeiculoIcon() },
     { href: "/servicos", label: "Serviços", icon: Wrench },
     { href: "/estoque", label: "Stock", icon: Package },
     { href: "/financeiro", label: "Financeiro", icon: DollarSign },

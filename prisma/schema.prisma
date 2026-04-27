@@ -97,6 +97,7 @@ model Tenant {
   logo              String?
   plano             Plano         @default(STARTER)
   ativo             Boolean       @default(true)
+  tipoOficina      TipoOficina   @default(AMBOS)
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
 
@@ -149,6 +150,7 @@ model Usuario {
   senha       String
   nivel       NivelAcesso @default(CLIENTE)
   ativo       Boolean     @default(true)
+  tipoOficina      TipoOficina   @default(AMBOS)
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
   avatar      String?
@@ -176,6 +178,7 @@ model Cliente {
   endereco    String?
   observacoes String?
   ativo       Boolean  @default(true)
+  tipoOficina      TipoOficina   @default(AMBOS)
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
 
@@ -213,6 +216,7 @@ model Veiculo {
   chassi      String?
   observacoes String?
   ativo       Boolean     @default(true)
+  tipoOficina      TipoOficina   @default(AMBOS)
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
 
@@ -242,6 +246,7 @@ model Tecnico {
   especialidade String?
   telefone      String?
   ativo         Boolean @default(true)
+  tipoOficina      TipoOficina   @default(AMBOS)
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
 
@@ -266,6 +271,7 @@ model Servico {
   tempoEstMin   Int?
   precoMaoObra  Decimal     @db.Decimal(10,2)
   ativo         Boolean     @default(true)
+  tipoOficina      TipoOficina   @default(AMBOS)
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
 
@@ -297,6 +303,7 @@ model Peca {
   margemLucro Decimal?      @db.Decimal(5,2)
   imagem      String?
   ativo       Boolean       @default(true)
+  tipoOficina      TipoOficina   @default(AMBOS)
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
 
@@ -515,6 +522,7 @@ model TraccarServer {
   username  String
   password  String
   ativo     Boolean  @default(true)
+  tipoOficina      TipoOficina   @default(AMBOS)
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
   ordem     Int      @default(1)
@@ -663,4 +671,10 @@ model AlertaFraude {
   entidadeId  String?
   resolvido   Boolean  @default(false)
   createdAt   DateTime @default(now())
+}
+
+enum TipoOficina {
+  CARROS
+  MOTOS
+  AMBOS
 }
