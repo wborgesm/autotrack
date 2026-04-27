@@ -653,3 +653,30 @@ model RegistroTempo {
   @@index([ordemId])
   @@map("registros_tempo")
 }
+
+model Tenant {
+  // ... campos existentes ...
+  latitude       String?
+  longitude      String?
+  raioPermitido  Int     @default(100)
+}
+
+model Aluguer {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  veiculoId   String
+  veiculo     Veiculo  @relation(fields: [veiculoId], references: [id])
+  dataInicio  DateTime
+  dataFim     DateTime?
+  valorDiaria Decimal  @db.Decimal(10,2)
+  valorTotal  Decimal? @db.Decimal(10,2)
+  status      String   @default("ATIVO") // ATIVO, FINALIZADO, CANCELADO
+  observacoes String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("alugueres")
+}
