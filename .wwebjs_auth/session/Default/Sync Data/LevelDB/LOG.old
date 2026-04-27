@@ -1,2 +1,3 @@
-2026/04/27-12:41:57.870 2b2b0 Creating DB /var/www/html/autotrack/.wwebjs_auth/session/Default/Sync Data/LevelDB since it was missing.
-2026/04/27-12:41:57.913 2b2b0 Reusing MANIFEST /var/www/html/autotrack/.wwebjs_auth/session/Default/Sync Data/LevelDB/MANIFEST-000001
+2026/04/27-12:43:23.838 2b463 Reusing MANIFEST /var/www/html/autotrack/.wwebjs_auth/session/Default/Sync Data/LevelDB/MANIFEST-000001
+2026/04/27-12:43:23.843 2b463 Recovering log #3
+2026/04/27-12:43:23.843 2b463 Reusing old log /var/www/html/autotrack/.wwebjs_auth/session/Default/Sync Data/LevelDB/000003.log 
