@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Store, Smartphone, Star, MapPin, MessageCircle, Globe, Clock, Bell } from "lucide-react";
+import { User, Store, Smartphone, Star, MapPin, MessageCircle, Globe, Clock, Bell, Camera } from "lucide-react";
 
 export default function ConfiguracoesPage() {
   const { data: session, update } = useSession();
   const [perfil, setPerfil] = useState({ nome: "", email: "", avatar: "" });
   const [oficina, setOficina] = useState<any>({});
   const [addons, setAddons] = useState<any>({});
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const nivel = session?.user?.nivel || "";
   const podeEditarOficina = nivel === "ADMIN" || nivel === "SUPER_ADMIN";
@@ -29,6 +31,28 @@ export default function ConfiguracoesPage() {
       .catch(() => {});
   }, [session]);
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        setPerfil(p => ({ ...p, avatar: data.url }));
+      }
+    } catch (err) { console.error(err); }
+    finally { setUploading(false); }
+  };
+
+  const handleSavePerfil = async () => {
+    await fetch("/api/usuario/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nome: perfil.nome, avatar: perfil.avatar }) });
+    update();
+    alert("Perfil atualizado.");
+  };
+
   const handleSaveOficina = async () => {
     const res = await fetch("/api/configuracoes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ oficina }) });
     if (res.ok) alert("Dados guardados.");
@@ -41,11 +65,7 @@ export default function ConfiguracoesPage() {
     else alert("Erro ao guardar.");
   };
 
-  const handleSavePerfil = async () => {
-    await fetch("/api/usuario/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nome: perfil.nome, avatar: perfil.avatar }) });
-    update();
-    alert("Perfil atualizado.");
-  };
+  const showAvatarUpload = true; // todos podem alterar avatar
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
@@ -59,10 +79,31 @@ export default function ConfiguracoesPage() {
 
         <TabsContent value="perfil">
           <Card><CardHeader><CardTitle>Meu Perfil</CardTitle></CardHeader><CardContent className="space-y-4">
+            {showAvatarUpload && (
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  {perfil.avatar ? (
+                    <img src={perfil.avatar.startsWith("/uploads") ? perfil.avatar : perfil.avatar} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-2 border-gray-300" />
+                  ) : (
+                    <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">{session?.user?.name?.charAt(0) || "U"}</div>
+                  )}
+                  <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 bg-white dark:bg-gray-700 rounded-full p-1.5 shadow-lg border hover:bg-gray-100" title="Alterar foto">
+                    <Camera className="h-4 w-4" />
+                  </button>
+                </div>
+                <div>
+                  <p className="font-medium">{perfil.nome}</p>
+                  <p className="text-sm text-gray-500">{perfil.email}</p>
+                  <Button variant="link" className="p-0 h-auto text-sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                    {uploading ? "A enviar..." : "Alterar foto"}
+                  </Button>
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                </div>
+              </div>
+            )}
             <div><Label>Nome</Label><Input className="bg-gray-100 dark:bg-gray-700" value={perfil.nome} onChange={e => setPerfil({...perfil, nome: e.target.value})} /></div>
             <div><Label>Email</Label><Input className="bg-gray-100 dark:bg-gray-700" value={perfil.email} disabled /></div>
-            <div><Label>Avatar (URL)</Label><Input className="bg-gray-100 dark:bg-gray-700" value={perfil.avatar} onChange={e => setPerfil({...perfil, avatar: e.target.value})} /></div>
-            <Button onClick={handleSavePerfil} className="bg-blue-600">Guardar</Button>
+            <Button onClick={handleSavePerfil} className="bg-blue-600">Guardar Perfil</Button>
           </CardContent></Card>
         </TabsContent>
 
@@ -78,7 +119,7 @@ export default function ConfiguracoesPage() {
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div><Label>Tipo de Oficina</Label>
-                    <Select value={oficina.tipoOficina || "AMBOS"} onValueChange={v => setOficina({...oficina, tipoOficina: v})} disabled={!podeEditarOficina}>
+                    <Select value={oficina.tipoOficina || "AMBOS"} onValueChange={v => setOficina({...oficina, tipoOficina: v})}>
                       <SelectTrigger className="bg-gray-100 dark:bg-gray-700"><SelectValue /></SelectTrigger>
                       <SelectContent><SelectItem value="CARROS">🚗 Carros</SelectItem><SelectItem value="MOTOS">🏍️ Motos</SelectItem><SelectItem value="AMBOS">🚗🏍️ Ambos</SelectItem></SelectContent>
                     </Select>
@@ -86,9 +127,9 @@ export default function ConfiguracoesPage() {
                 </div>
                 <div className="border-t pt-4"><p className="font-semibold mb-2">📍 Localização para Ponto</p>
                   <div className="grid grid-cols-3 gap-4">
-                    <div><Label>Latitude</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.latitude || ""} onChange={e => setOficina({...oficina, latitude: e.target.value})} disabled={!podeEditarOficina} /></div>
-                    <div><Label>Longitude</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.longitude || ""} onChange={e => setOficina({...oficina, longitude: e.target.value})} disabled={!podeEditarOficina} /></div>
-                    <div><Label>Raio (m)</Label><Input className="bg-gray-100 dark:bg-gray-700" type="number" value={oficina.raioPermitido || "100"} onChange={e => setOficina({...oficina, raioPermitido: e.target.value})} disabled={!podeEditarOficina} /></div>
+                    <div><Label>Latitude</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.latitude || ""} onChange={e => setOficina({...oficina, latitude: e.target.value})} /></div>
+                    <div><Label>Longitude</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.longitude || ""} onChange={e => setOficina({...oficina, longitude: e.target.value})} /></div>
+                    <div><Label>Raio (m)</Label><Input className="bg-gray-100 dark:bg-gray-700" type="number" value={oficina.raioPermitido || "100"} onChange={e => setOficina({...oficina, raioPermitido: e.target.value})} /></div>
                   </div>
                 </div>
                 <Button onClick={handleSaveOficina} className="bg-blue-600">Guardar</Button>

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { checkApiPermissao } from "@/lib/permissoes";
 import { getMobileUser } from "@/lib/auth-mobile";
 import { NivelAcesso } from "@prisma/client";
 import { z } from "zod";
@@ -13,8 +12,7 @@ export async function GET(req: NextRequest) {
   if (!session && !mobileUser) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const tenantId = session?.user.tenantId || mobileUser?.tenantId;
-  const nivel = (session?.user.nivel || mobileUser?.nivel || "CLIENTE") as NivelAcesso;
-  if (!tenantId || !checkApiPermissao(nivel, "ordens")) return NextResponse.json({ error: "Permissão negada" }, { status: 403 });
+  if (!tenantId) return NextResponse.json({ error: "Tenant não encontrado" }, { status: 400 });
 
   const { searchParams } = req.nextUrl;
   const status = searchParams.get("status") || undefined;

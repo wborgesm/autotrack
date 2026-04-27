@@ -21,9 +21,9 @@ export default function PontoPage() {
 
   useEffect(() => {
     if (!session) return;
-    fetch("/api/tecnicos").then(r => r.ok ? r.json() : []).then(setTecnicos).catch(() => setTecnicos([]));
+    fetch("/api/tecnicos").then(r => r.ok ? r.json() : []).then(d => setTecnicos(Array.isArray(d) ? d : [])).catch(() => setTecnicos([]));
     fetch("/api/ordens?status=ABERTA&status=EM_DIAGNOSTICO&status=EM_SERVICO")
-      .then(r => r.ok ? r.json() : []).then(setOrdens).catch(() => setOrdens([]));
+      .then(r => r.ok ? r.json() : []).then(d => setOrdens(Array.isArray(d) ? d : [])).catch(() => setOrdens([]));
     obterLocalizacao();
   }, [session]);
 
@@ -36,7 +36,7 @@ export default function PontoPage() {
   };
 
   const fetchRegistos = () => {
-    if (tecnicoId) fetch(`/api/tempo?tecnicoId=${tecnicoId}`).then(r => r.ok ? r.json() : []).then(setRegistos).catch(() => setRegistos([]));
+    if (tecnicoId) fetch(`/api/tempo?tecnicoId=${tecnicoId}`).then(r => r.ok ? r.json() : []).then(d => setRegistos(Array.isArray(d) ? d : [])).catch(() => setRegistos([]));
   };
   useEffect(() => { fetchRegistos(); }, [tecnicoId]);
 
