@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard, Calendar, ClipboardList, Users, Car, Wrench,
-  Package, DollarSign, BarChart3, ShieldCheck, FileText, Settings, MapPin, Star, LogOut, X,
+  Package, DollarSign, BarChart3, ShieldCheck, ShoppingCart, Wallet, CreditCard, Coffee, FileText, Settings, MapPin, Star, LogOut, X,
   Building, Bell, MessageCircle, Clock, KeyRound, Bike
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -79,6 +79,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const addonItems = [
     { href: "/ponto", label: "Ponto Eletrónico", icon: Clock },
     { href: "/alugueres", label: "Alugueres", icon: KeyRound },
+    { href: "/caixa", label: "Caixa", icon: ShoppingCart },
   ];
   if (session?.user.addons?.gps) addonItems.push({ href: "/addons/gps", label: "Autotrack", icon: MapPin });
   if (session?.user.addons?.pontos) addonItems.push({ href: "/addons/pontos", label: "Fidelidade", icon: Star });

@@ -1,3 +1,4 @@
+import SearchBar from "@/components/layout/SearchBar";
 import VersionBadge from "@/components/layout/VersionBadge";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
