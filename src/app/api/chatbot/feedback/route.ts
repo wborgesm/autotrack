@@ -9,18 +9,21 @@ export async function POST(req: NextRequest) {
 
   const { pergunta, resposta, util } = await req.json();
   
-  // Atualiza o último log do chat com a avaliação
-  await prisma.chatLog.updateMany({
+  // Encontra o último log deste utilizador com esta pergunta
+  const log = await prisma.chatLog.findFirst({
     where: {
       usuarioId: session.user.id,
       pergunta: pergunta || "",
     },
-    data: {
-      util: util === true,
-    },
     orderBy: { createdAt: "desc" },
-    take: 1,
   });
+
+  if (log) {
+    await prisma.chatLog.update({
+      where: { id: log.id },
+      data: { util: util === true },
+    });
+  }
 
   return NextResponse.json({ success: true });
 }
