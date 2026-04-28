@@ -139,10 +139,7 @@ const synonymMap: Record<string, string> = {
   "listar tudo": "ver",
   
   // === PALAVRAS SIMPLES ===
-  "estoque": "stock",
-  "inventario": "inventário",
   "inventário": "stock",
-  "estoque": "stock",
   "peça": "stock",
   "peças": "stock",
   "os": "ordem de serviço",
@@ -301,7 +298,6 @@ const synonymMap: Record<string, string> = {
   "crira": "criar",
   "criiar": "criar",
   "edt": "editar",
-  "editar": "editar",
   "apagar": "eliminar",
   "deletar": "eliminar",
   "excluir": "eliminar",
