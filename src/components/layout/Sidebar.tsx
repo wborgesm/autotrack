@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard, Calendar, ClipboardList, Users, Car, Wrench,
-  Package, DollarSign, BarChart3, ShieldCheck, ShoppingCart, Wallet, CreditCard, Coffee, FileText, Settings, MapPin, Star, LogOut, X, Bot,
+  Package, DollarSign, BarChart3, ShieldCheck, ShoppingCart, Wallet, CreditCard, Coffee, FileText, Settings, MapPin, Star, LogOut, X, TrendingUp, Bot,
   Building, Bell, MessageCircle, Clock, KeyRound, Bike
 } from "lucide-react";
 import { cn } from "@/lib/utils";

@@ -1,12 +1,14 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Loader2, Bot, User, AlertTriangle } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Bot, User, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { saudacoes, processando, aleatorio } from "@/lib/chatbot-frases";
 
 interface Mensagem {
   tipo: "user" | "bot";
   texto: string;
+  fonte?: "conhecimento" | "gemini";
 }
 
 export default function FloatingChat() {
@@ -14,33 +16,59 @@ export default function FloatingChat() {
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [remaining, setRemaining] = useState<number | null>(null);
-  const [showAlert, setShowAlert] = useState(false);
+  const [falhasSeguidas, setFalhasSeguidas] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens]);
 
-  const enviar = async () => {
-    if (!input.trim()) return;
-    const pergunta = input;
-    setInput("");
-    setMensagens(prev => [...prev, { tipo: "user", texto: pergunta }]);
+  // Mostra saudação quando abre o chat pela primeira vez
+  useEffect(() => {
+    if (aberto && mensagens.length === 0) {
+      setMensagens([{ tipo: "bot", texto: aleatorio(saudacoes), fonte: "conhecimento" }]);
+    }
+  }, [aberto]);
+
+  const enviar = async (forcarIA: boolean = false) => {
+    if (!input.trim() && !forcarIA) return;
+    const pergunta = forcarIA ? mensagens[mensagens.length - 1]?.texto || input : input;
+    if (!pergunta.trim()) return;
+    
+    if (!forcarIA) {
+      setInput("");
+      setMensagens(prev => [...prev, { tipo: "user", texto: pergunta }]);
+    }
     setLoading(true);
 
     try {
       const res = await fetch("/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pergunta }),
+        body: JSON.stringify({ pergunta, usarIA: forcarIA ? true : false }),
       });
       const data = await res.json();
-      setMensagens(prev => [...prev, { tipo: "bot", texto: data.resposta || "Erro ao obter resposta." }]);
-      setRemaining(data.remaining ?? null);
-      setShowAlert(data.alert === true);
-    } catch {
-      setMensagens(prev => [...prev, { tipo: "bot", texto: "Erro de rede." }]);
+      
+      setMensagens(prev => [...prev, {
+        tipo: "bot",
+        texto: data.resposta || "Erro ao obter resposta.",
+        fonte: data.fonte || "conhecimento"
+      }]);
+      
+      if (data.precisaIA === true) {
+        setFalhasSeguidas(prev => prev + 1);
+        if (falhasSeguidas >= 2) {
+          setTimeout(() => {
+            setMensagens(prev => [...prev, { tipo: "bot", texto: "🔄 A pesquisar com IA avançada..." }]);
+            enviar(true);
+          }, 500);
+        }
+      } else {
+        setFalhasSeguidas(0);
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+      setMensagens(prev => [...prev, { tipo: "bot", texto: "Erro de rede.", fonte: "conhecimento" }]);
     } finally {
       setLoading(false);
     }
@@ -58,7 +86,7 @@ export default function FloatingChat() {
       {!aberto && (
         <button
           onClick={() => setAberto(true)}
-          className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-2xl transition-all duration-300 hover:scale-110 flex items-center gap-2"
+          className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-2xl transition-all duration-300 hover:scale-110"
         >
           <MessageCircle className="h-6 w-6" />
         </button>
@@ -66,7 +94,6 @@ export default function FloatingChat() {
 
       {aberto && (
         <div className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[90vw] h-[520px] max-h-[70vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
-          {/* Cabeçalho */}
           <div className="flex items-center justify-between bg-blue-600 text-white px-4 py-3 shrink-0">
             <div className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
@@ -77,39 +104,25 @@ export default function FloatingChat() {
             </button>
           </div>
 
-          {/* Alerta de limite */}
-          {showAlert && remaining && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/30 border-b border-yellow-200 dark:border-yellow-800 px-4 py-2 flex items-center gap-2 text-yellow-700 dark:text-yellow-300 text-xs">
-              <AlertTriangle className="h-3 w-3" />
-              <span>Restam apenas {remaining} pedidos hoje.</span>
-            </div>
-          )}
-
-          {/* Mensagens */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {mensagens.length === 0 && (
-              <div className="text-center text-gray-500 text-sm mt-4">
-                <Bot className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                <p>👋 Olá! Sou o assistente do AutoTrack.</p>
-                <p className="text-xs mt-1">Pergunta-me como usar qualquer módulo.</p>
-                {remaining && remaining <= 50 && (
-                  <p className="text-xs text-red-500 mt-2">⚠️ Apenas {remaining} pedidos restantes hoje.</p>
-                )}
-              </div>
-            )}
             {mensagens.map((msg, idx) => (
               <div key={idx} className={`flex gap-2 ${msg.tipo === "user" ? "justify-end" : "justify-start"}`}>
                 {msg.tipo === "bot" && (
                   <div className="bg-blue-100 dark:bg-blue-900 rounded-full p-1.5 shrink-0 mt-1">
-                    <Bot className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    {msg.fonte === "gemini" ? <Brain className="h-4 w-4 text-purple-600" /> : <Bot className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
                   </div>
                 )}
                 <div className={`rounded-2xl px-3 py-2 max-w-[85%] text-sm ${
                   msg.tipo === "user"
                     ? "bg-blue-600 text-white"
+                    : msg.fonte === "gemini"
+                    ? "bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 text-gray-900 dark:text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
                 }`}>
-                  <p className="whitespace-pre-wrap">{msg.texto}</p>
+                  <p className="whitespace-pre-wrap text-xs">{msg.texto}</p>
+                  {msg.fonte === "gemini" && (
+                    <p className="text-[10px] text-purple-500 mt-1">🤖 Resposta via IA (Gemini)</p>
+                  )}
                 </div>
                 {msg.tipo === "user" && (
                   <div className="bg-blue-600 rounded-full p-1.5 shrink-0 mt-1">
@@ -120,23 +133,21 @@ export default function FloatingChat() {
             ))}
             {loading && (
               <div className="flex items-center gap-2 text-gray-500 text-sm pl-8">
-                <Loader2 className="h-4 w-4 animate-spin" /> A pensar...
+                <Loader2 className="h-4 w-4 animate-spin" /> {aleatorio(processando)}
               </div>
             )}
             <div ref={scrollRef} />
           </div>
 
-          {/* Input */}
           <div className="p-3 border-t border-gray-200 dark:border-gray-700 shrink-0 flex gap-2">
             <Input
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={remaining && remaining <= 0 ? "Limite diário atingido..." : "Pergunta algo..."}
+              placeholder="Pergunta algo..."
               className="flex-1 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-sm"
-              disabled={remaining !== null && remaining <= 0}
             />
-            <Button size="sm" onClick={enviar} disabled={loading || !input.trim() || (remaining !== null && remaining <= 0)} className="bg-blue-600">
+            <Button size="sm" onClick={() => enviar()} disabled={loading || !input.trim()} className="bg-blue-600">
               <Send className="h-4 w-4" />
             </Button>
           </div>

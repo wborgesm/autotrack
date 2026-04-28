@@ -777,3 +777,19 @@ model ReservaPeca {
 
   @@map("reservas_pecas")
 }
+
+model ChatLog {
+  id        String   @id @default(cuid())
+  tenantId  String
+  usuarioId String?
+  usuarioNome String?
+  nivel     String?
+  pergunta  String
+  resposta  String?
+  fonte     String?  // "conhecimento", "gemini", "fallback"
+  util      Boolean? // se a resposta foi útil (do conhecimento)
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, createdAt])
+  @@map("chat_logs")
+}

@@ -1,0 +1,389 @@
+/**
+ * MAPEAMENTO DE SINÓNIMOS, ERROS DE DIGITAÇÃO E ABREVIAÇÕES
+ * Para PT-PT e PT-BR
+ * 
+ * Ordenado por tamanho (maior → menor) para evitar conflitos
+ * Inclui normalização de acentos
+ */
+
+const synonymMap: Record<string, string> = {
+  // === INTENÇÕES COMPOSTAS (mais específicas primeiro) ===
+  "criar ordem de serviço": "criar ordem de serviço",
+  "abrir ordem de serviço": "criar ordem de serviço",
+  "nova ordem de serviço": "criar ordem de serviço",
+  "fazer ordem de serviço": "criar ordem de serviço",
+  "abrir uma ordem": "criar ordem de serviço",
+  "criar uma os": "criar ordem de serviço",
+  "abrir uma os": "criar ordem de serviço",
+  "nova os": "criar ordem de serviço",
+  "abrir os": "criar ordem de serviço",
+  "criar os": "criar ordem de serviço",
+  "fazer os": "criar ordem de serviço",
+  "lançar os": "criar ordem de serviço",
+  "abrir serviço": "criar ordem de serviço",
+  "iniciar serviço": "criar ordem de serviço",
+  "serviço novo": "criar ordem de serviço",
+  "ordem de serviço": "ordem de serviço",
+  "ordem de servico": "ordem de serviço",
+  "ordens de serviço": "ordem de serviço",
+  "estado da os": "estados ordem serviço",
+  "status da os": "estados ordem serviço",
+  "os em andamento": "estados ordem serviço",
+  "os atrasada": "estados ordem serviço",
+  "os parada": "estados ordem serviço",
+  "mudar estado": "alterar estado",
+  "trocar estado": "alterar estado",
+  "concluir os": "estados ordem serviço",
+  "finalizar os": "estados ordem serviço",
+  "ordem aberta": "estado ordem serviço",
+  "os aberta": "estado ordem serviço",
+  
+  // === STOCK (compostos primeiro) ===
+  "sem stock": "stock mínimo",
+  "sem estoque": "stock mínimo",
+  "acabou peça": "stock mínimo",
+  "acabou a peça": "stock mínimo",
+  "acabou produto": "stock mínimo",
+  "produto em falta": "stock mínimo",
+  "tem em stock": "ver stock",
+  "tem em estoque": "ver stock",
+  "quantidade disponível": "stock disponível",
+  "quantidade disponivel": "stock disponível",
+  "stock baixo": "stock mínimo",
+  "estoque baixo": "stock mínimo",
+  "estoque minimo": "stock mínimo",
+  "codigo de barras": "código de barras",
+  "código de barras": "código de barras",
+  "margem de lucro": "margem de lucro",
+  "margem lucro": "margem de lucro",
+  "entrada stock": "movimentação stock",
+  "saida stock": "movimentação stock",
+  "ajuste stock": "movimentação stock",
+  
+  // === ENCOMENDAS (compostos) ===
+  "fazer pedido": "encomendas",
+  "criar pedido": "encomendas",
+  "pedido fornecedor": "encomendas",
+  "comprar produto": "encomendas",
+  "comprar item": "encomendas",
+  "pedido de compra": "encomendas",
+  "ordem de compra": "encomendas",
+  "compra fornecedor": "encomendas",
+  "pedido atrasado": "encomendas",
+  "comprar peça": "encomendas",
+  "comprar pecas": "encomendas",
+  
+  // === CAIXA (compostos) ===
+  "fechar o caixa": "caixa",
+  "abrir o caixa": "caixa",
+  "quanto tem no caixa": "caixa",
+  "saldo caixa": "caixa",
+  "saldo do caixa": "caixa",
+  "movimento caixa": "caixa",
+  "abrir caixa": "caixa",
+  "fechar caixa": "caixa",
+  
+  // === FINANCEIRO (compostos) ===
+  "quanto ganhei": "financeiro",
+  "lucro hoje": "financeiro",
+  "quanto faturou": "financeiro",
+  "faturou hoje": "financeiro",
+  "dinheiro hoje": "financeiro",
+  "fluxo caixa": "financeiro",
+  "lancar receita": "financeiro",
+  "lancar despesa": "financeiro",
+  
+  // === CLIENTES (compostos) ===
+  "dados cliente": "clientes",
+  "info cliente": "clientes",
+  "email cliente": "clientes",
+  "telefone cliente": "clientes",
+  "cadastrar cliente": "clientes",
+  "criar cliente": "clientes",
+  "novo cliente": "clientes",
+  
+  // === VEÍCULOS (compostos) ===
+  "dados veiculo": "veículos",
+  "info veiculo": "veículos",
+  "carro cliente": "veículos",
+  "veiculo cliente": "veículos",
+  "consultar matricula": "veículos",
+  "ver carro": "veículos",
+  "cadastrar veiculo": "veículos",
+  "adicionar veiculo": "veículos",
+  "cadastrar viatura": "veículos",
+  
+  // === ORÇAMENTOS (compostos) ===
+  "criar orçamento": "criar orçamento",
+  "fazer orçamento": "criar orçamento",
+  "converter orçamento": "converter orçamento em os",
+  "converter orçamento em os": "converter orçamento em os",
+  
+  // === PONTO ELETRÓNICO (compostos) ===
+  "bater ponto": "ponto eletrónico",
+  "registar ponto": "ponto eletrónico",
+  "registro ponto": "ponto eletrónico",
+  "ponto eletrónico": "ponto eletrónico",
+  "ponto eletronico": "ponto eletrónico",
+  
+  // === CONFIGURAÇÕES (compostos) ===
+  "foto perfil": "configurações",
+  "alterar foto": "configurações",
+  "dados oficina": "configurações",
+  "nome oficina": "configurações",
+  
+  // === BUSCA (compostos) ===
+  "quero ver": "ver",
+  "me mostra": "ver",
+  "mostrar": "ver",
+  "listar tudo": "ver",
+  
+  // === PALAVRAS SIMPLES ===
+  "estoque": "stock",
+  "inventario": "inventário",
+  "inventário": "stock",
+  "estoque": "stock",
+  "peça": "stock",
+  "peças": "stock",
+  "os": "ordem de serviço",
+  "freguês": "clientes",
+  "fregues": "clientes",
+  "cliente": "clientes",
+  "viatura": "veículos",
+  "carro": "veículos",
+  "moto": "veículos",
+  "camião": "veículos",
+  "caminhao": "veículos",
+  "placa": "matrícula",
+  "matricula": "matrícula",
+  "chapa": "matrícula",
+  "dinheiro": "financeiro",
+  "receita": "financeiro",
+  "despesa": "financeiro",
+  "lancamento": "financeiro",
+  "lançamento": "financeiro",
+  "faturamento": "financeiro",
+  "contas": "financeiro",
+  "saldo": "financeiro",
+  "venda": "caixa",
+  "vender": "caixa",
+  "pdv": "caixa",
+  "troco": "caixa",
+  "pagamento": "caixa",
+  "cartão": "caixa",
+  "cartao": "caixa",
+  "mbway": "caixa",
+  "mb way": "caixa",
+  "calendario": "agenda",
+  "calendário": "agenda",
+  "marcação": "agenda",
+  "marcacao": "agenda",
+  "agendar": "agenda",
+  "agendamento": "agenda",
+  "marcar": "agenda",
+  "compromisso": "agenda",
+  "horario": "agenda",
+  "horário": "agenda",
+  "orçamento": "orçamentos",
+  "orcamento": "orçamentos",
+  "orçar": "orçamentos",
+  "orcar": "orçamentos",
+  "usuario": "utilizadores",
+  "usuário": "utilizadores",
+  "funcionario": "utilizadores",
+  "funcionário": "utilizadores",
+  "colaborador": "utilizadores",
+  "senha": "utilizadores",
+  "password": "utilizadores",
+  "login": "utilizadores",
+  "config": "configurações",
+  "configuracao": "configurações",
+  "definições": "configurações",
+  "definicoes": "configurações",
+  "perfil": "configurações",
+  "avatar": "configurações",
+  "foto": "configurações",
+  "facebook": "redes sociais",
+  "instagram": "redes sociais",
+  "tiktok": "redes sociais",
+  "fatura": "faturar",
+  "faturar": "faturar",
+  "faturação": "faturar",
+  "faturacao": "faturar",
+  "moloni": "faturar",
+  "certificada": "faturar",
+  "nfe": "faturar",
+  "ponto": "ponto eletrónico",
+  "entrada": "ponto eletrónico",
+  "saida": "ponto eletrónico",
+  "saída": "ponto eletrónico",
+  "intervalo": "ponto eletrónico",
+  "almoço": "ponto eletrónico",
+  "almoco": "ponto eletrónico",
+  "checkin": "ponto eletrónico",
+  "check in": "ponto eletrónico",
+  "check-in": "ponto eletrónico",
+  "geolocalização": "ponto eletrónico",
+  "localização": "ponto eletrónico",
+  "localizacao": "ponto eletrónico",
+  "raio": "ponto eletrónico",
+  "aluguer": "alugueres",
+  "aluguel": "alugueres",
+  "alugar": "alugueres",
+  "rent": "alugueres",
+  "encomenda": "encomendas",
+  "compras": "encomendas",
+  "fornecedor": "encomendas",
+  "fornecedores": "encomendas",
+  "pedido": "encomendas",
+  "encomendar": "encomendas",
+  "relatorio": "relatórios",
+  "relatório": "relatórios",
+  "exportar": "relatórios",
+  "csv": "relatórios",
+  "excel": "relatórios",
+  "download": "relatórios",
+  "painel": "dashboard",
+  "home": "dashboard",
+  "inicio": "dashboard",
+  "início": "dashboard",
+  "kpi": "dashboard",
+  "grafico": "dashboard",
+  "gráfico": "dashboard",
+  "indicadores": "dashboard",
+  "auditoria": "auditoria",
+  "log": "auditoria",
+  "logs": "auditoria",
+  "historico": "auditoria",
+  "histórico": "auditoria",
+  "alterações": "auditoria",
+  "alteracoes": "auditoria",
+  "empresa": "empresas",
+  "oficina": "empresas",
+  "tenant": "empresas",
+  "filial": "empresas",
+  "loja": "empresas",
+  "plano": "empresas",
+  "starter": "empresas",
+  "professional": "empresas",
+  "business": "empresas",
+  "nif": "nif",
+  "cpf": "nif",
+  "cnpj": "nif",
+  "documento": "nif",
+  "morada": "morada",
+  "endereço": "morada",
+  "endereco": "morada",
+  "whatsapp": "whatsapp",
+  "sms": "notificações",
+  "whatsapp oficina": "whatsapp",
+  "contacto": "clientes",
+  "contato": "clientes",
+  "telefone": "clientes",
+  "ajuda": "ajuda",
+  "help": "ajuda",
+  "socorro": "ajuda",
+  "tutorial": "ajuda",
+  "guia": "ajuda",
+  "menu": "ajuda",
+  "atalho": "ajuda",
+  "segurança": "segurança",
+  "seguranca": "segurança",
+  "bloquear": "segurança",
+  "bloqueio": "segurança",
+  "burla": "segurança",
+  "fraude": "segurança",
+  "anti fraude": "segurança",
+  "anti-fraude": "segurança",
+  "roubo": "segurança",
+  
+  // === ERROS COMUNS DE DIGITAÇÃO ===
+  "crira": "criar",
+  "criiar": "criar",
+  "edt": "editar",
+  "editar": "editar",
+  "apagar": "eliminar",
+  "deletar": "eliminar",
+  "excluir": "eliminar",
+  "delet": "eliminar",
+  "remover": "eliminar",
+  "salvar": "guardar",
+  "gravar": "guardar",
+  "salv": "guardar",
+  "guarda": "guardar",
+  "guard": "guardar",
+  "vizualizar": "ver",
+  "vizualisar": "ver",
+  "vizualiza": "ver",
+  "vizualisa": "ver",
+  "visualizar": "ver",
+  "listar": "ver",
+  "lista": "ver",
+  "consulta": "ver",
+  "mostra": "ver",
+  "pesquisa": "busca",
+  "busca": "busca",
+  "buscar": "busca",
+  "procurar": "busca",
+  "procur": "busca",
+  "buscr": "busca",
+  "proucurar": "busca",
+  "encontra": "busca",
+  "achar": "busca",
+  "orcmento": "orçamentos",
+  "encomnda": "encomendas",
+  "encomneda": "encomendas",
+  "cliete": "clientes",
+  "clente": "clientes",
+  "veicuo": "veículos",
+  "veiculoo": "veículos",
+  "stok": "stock",
+  "stoq": "stock",
+};
+
+// Ordenado por tamanho (maior → menor) — CRÍTICO para evitar conflitos
+const sortedEntries = Object.entries(synonymMap)
+  .sort((a, b) => b[0].length - a[0].length);
+
+/**
+ * Normaliza texto removendo acentos e caracteres especiais
+ */
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove acentos
+    .trim();
+}
+
+/**
+ * Normaliza uma pergunta substituindo termos por sinónimos canónicos
+ */
+export function normalizeQuestion(question: string): string {
+  let normalized = normalizeText(question);
+  
+  // Substitui cada termo do mapeamento (ordenado por tamanho)
+  for (const [key, value] of sortedEntries) {
+    const normalizedKey = normalizeText(key);
+    const normalizedValue = normalizeText(value);
+    if (normalizedKey === normalizedValue) continue; // ignora mapeamentos inúteis
+    const regex = new RegExp(`\\b${escapeRegex(normalizedKey)}\\b`, 'gi');
+    normalized = normalized.replace(regex, normalizedValue);
+  }
+  
+  return normalized;
+}
+
+/**
+ * Extrai palavras-chave principais de uma pergunta normalizada
+ */
+export function extractKeywords(question: string): string[] {
+  const normalized = normalizeText(question);
+  const words = normalized.split(/\s+/);
+  const stopWords = ["de", "do", "da", "em", "no", "na", "para", "com", "como", "que", "um", "uma", "o", "a", "os", "as", "eu", "me", "se", "te", "ao", "a", "aos", "as", "por", "pelo", "pela", "pelos", "pelas"];
+  return Array.from(new Set(words.filter(w => w.length > 2 && !stopWords.includes(w))));
+}
+
+function escapeRegex(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
