@@ -7,6 +7,18 @@ import { aleatorio, saudacoes, naoEntendi, sugestoes, finalizacao } from "./chat
  * Nunca mostra o documento completo.
  */
 const respostasDiretas: { chaves: string[]; resposta: string }[] = [
+  // === SAUDAÇÕES ===
+  {
+    chaves: ["ola", "olá", "oi", "bom dia", "boa tarde", "boa noite", "boas", "e aí", "e ai", "iae", "salve", "opa", "hello", "hey", "como vai", "tudo bem", "tudo bom"],
+    resposta: "Olá! 😊 Em que posso ajudar? Podes perguntar sobre:
+- Como criar uma OS
+- Como bater o ponto
+- Como emitir uma fatura
+- Como adicionar foto a uma peça
+- Como funciona o caixa
+
+Estou aqui para ajudar!"
+  },
   // === FATURAS ===
   {
     chaves: ["faturar", "fatura", "emitir fatura", "gerar fatura", "como faturar", "como emitir fatura"],
@@ -114,3 +126,10 @@ export function chatbotResposta(pergunta: string): { resposta: string; precisaIA
     precisaIA: false
   };
 }
+
+// Adicionar ao array respostasDiretas (antes do fecho do array)
+// === SAUDAÇÕES ===
+{
+  chaves: ["ola", "olá", "oi", "bom dia", "boa tarde", "boa noite", "boas", "e aí", "e ai", "iae", "salve", "opa", "hello", "hey", "bom dia", "boa tarde", "boa noite", "como vai", "tudo bem", "tudo bom"],
+  resposta: "Olá! 😊 Em que posso ajudar? Podes perguntar sobre:\n- Como criar uma OS\n- Como bater o ponto\n- Como emitir uma fatura\n- Como adicionar foto a uma peça\n- Como funciona o caixa\n\nEstou aqui para ajudar!"
+},

@@ -35,7 +35,7 @@ export default function FloatingChat() {
   const avaliar = (idx: number, util: boolean) => {
     setMensagens(prev => prev.map((m, i) => i === idx ? { ...m, avaliada: true } : m));
     const msg = mensagens[idx];
-    if (msg && msg.fonte === "bot") {
+    if (msg && msg.tipo === "bot") {
       fetch("/api/chatbot/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
