@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard, Calendar, ClipboardList, Users, Car, Wrench,
-  Package, DollarSign, BarChart3, ShieldCheck, ShoppingCart, Wallet, CreditCard, Coffee, FileText, Settings, MapPin, Star, LogOut, X,
+  Package, DollarSign, BarChart3, ShieldCheck, ShoppingCart, Wallet, CreditCard, Coffee, FileText, Settings, MapPin, Star, LogOut, X, Bot,
   Building, Bell, MessageCircle, Clock, KeyRound, Bike
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const navItems = [
     { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
     { href: "/caixa", label: "Caixa", icon: ShoppingCart },
+    { href: "/chatbot", label: "Assistente IA", icon: Bot },
     { href: "/agenda", label: "Agenda", icon: Calendar },
     { href: "/ordens", label: "Ordens", icon: ClipboardList },
     { href: "/clientes", label: "Clientes", icon: Users },

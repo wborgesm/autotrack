@@ -1,3 +1,4 @@
+import FloatingChat from "@/components/chat/FloatingChat";
 import SearchBar from "@/components/layout/SearchBar";
 import VersionCheck from "@/components/providers/VersionCheck";
 import type { Metadata } from "next";
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <VersionCheck />
+      <FloatingChat />
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>
       </body>
