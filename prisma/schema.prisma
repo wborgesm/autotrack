@@ -305,6 +305,7 @@ model Peca {
   unidade     UnidadeMedida @default(UN)
   qtdEstoque  Decimal       @default(0) @db.Decimal(10,2)
   qtdMinima   Decimal       @default(0) @db.Decimal(10,2)
+  quantidadeReservada Decimal?      @default(0) @db.Decimal(10,2)
   custoPadrao Decimal?      @db.Decimal(10,2)
   precoVenda  Decimal?      @db.Decimal(10,2)
   margemLucro Decimal?      @db.Decimal(5,2)
@@ -316,6 +317,7 @@ model Peca {
   movimentos  MovimentoEstoque[]
   itensPeca   ItemPecaOrdem[]
   orcamentoItens OrcamentoItem[]
+  reservas        ReservaPeca[]
   encomendaItens EncomendaItem[]
 
   createdAt   DateTime @default(now())
@@ -415,6 +417,7 @@ model OrdemServico {
   registrosTempo   RegistroTempo[]
   movimentosEstoque MovimentoEstoque[]
   faturas          Fatura[]
+  reservas        ReservaPeca[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -760,4 +763,17 @@ model EncomendaItem {
   servico       Servico? @relation(fields: [servicoId], references: [id])
 
   @@map("encomenda_itens")
+}
+
+model ReservaPeca {
+  id        String   @id @default(cuid())
+  tenantId  String
+  pecaId    String
+  peca      Peca     @relation(fields: [pecaId], references: [id], onDelete: Cascade)
+  ordemId   String?
+  ordem     OrdemServico? @relation(fields: [ordemId], references: [id], onDelete: SetNull)
+  quantidade Decimal  @db.Decimal(10,2)
+  criadoEm  DateTime @default(now())
+
+  @@map("reservas_pecas")
 }
