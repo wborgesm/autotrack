@@ -1,23 +1,10 @@
 import { normalizeQuestion, extractKeywords } from "./chatbot-synonyms";
-import { aleatorio, saudacoes, naoEntendi, sugestoes, finalizacao } from "./chatbot-frases";
 
-/**
- * RESPOSTAS DIRETAS — curtas e objetivas
- * Cada entrada tem palavras-chave e uma resposta pronta.
- * Nunca mostra o documento completo.
- */
 const respostasDiretas: { chaves: string[]; resposta: string }[] = [
   // === SAUDAÇÕES ===
   {
     chaves: ["ola", "olá", "oi", "bom dia", "boa tarde", "boa noite", "boas", "e aí", "e ai", "iae", "salve", "opa", "hello", "hey", "como vai", "tudo bem", "tudo bom"],
-    resposta: "Olá! 😊 Em que posso ajudar? Podes perguntar sobre:
-- Como criar uma OS
-- Como bater o ponto
-- Como emitir uma fatura
-- Como adicionar foto a uma peça
-- Como funciona o caixa
-
-Estou aqui para ajudar!"
+    resposta: "Olá! 😊 Em que posso ajudar? Podes perguntar sobre:\n- Como criar uma OS\n- Como bater o ponto\n- Como emitir uma fatura\n- Como adicionar foto a uma peça\n- Como funciona o caixa\n\nEstou aqui para ajudar!"
   },
   // === FATURAS ===
   {
@@ -96,7 +83,7 @@ Estou aqui para ajudar!"
   },
   // === NÍVEIS DE ACESSO ===
   {
-    chaves: ["super admin", "admin", "gerente", "tecnico", "tecnico", "recepcionista", "niveis", "níveis", "permissao", "permissão"],
+    chaves: ["super admin", "admin", "gerente", "tecnico", "recepcionista", "niveis", "níveis", "permissao", "permissão"],
     resposta: "Níveis de acesso do AutoTrack:\n• **SUPER_ADMIN** — dono da plataforma, acesso total\n• **ADMIN** — gere a sua oficina\n• **GERENTE** — gere operações (ordens, clientes, stock)\n• **TÉCNICO** — vê ordens e agenda\n• **RECEPCIONISTA** — atendimento e agendamentos"
   },
 ];
@@ -105,7 +92,6 @@ export function chatbotResposta(pergunta: string): { resposta: string; precisaIA
   const normalized = normalizeQuestion(pergunta);
   const keywords = extractKeywords(normalized);
   
-  // Procura nas respostas diretas
   for (const item of respostasDiretas) {
     const match = item.chaves.some(chave => {
       const normalizedChave = normalizeQuestion(chave);
@@ -113,23 +99,12 @@ export function chatbotResposta(pergunta: string): { resposta: string; precisaIA
     });
     
     if (match) {
-      return {
-        resposta: item.resposta,
-        precisaIA: false
-      };
+      return { resposta: item.resposta, precisaIA: false };
     }
   }
   
-  // Se não encontrou nada, resposta genérica
   return {
     resposta: "Não encontrei informação específica sobre isso. 🤔\n\n**Tenta uma destas perguntas:**\n- \"Como criar uma ordem de serviço?\"\n- \"Como bater o ponto?\"\n- \"Como emitir uma fatura?\"\n- \"Como adicionar foto a uma peça?\"\n\nOu consulta o menu correspondente no sistema.",
     precisaIA: false
   };
 }
-
-// Adicionar ao array respostasDiretas (antes do fecho do array)
-// === SAUDAÇÕES ===
-{
-  chaves: ["ola", "olá", "oi", "bom dia", "boa tarde", "boa noite", "boas", "e aí", "e ai", "iae", "salve", "opa", "hello", "hey", "bom dia", "boa tarde", "boa noite", "como vai", "tudo bem", "tudo bom"],
-  resposta: "Olá! 😊 Em que posso ajudar? Podes perguntar sobre:\n- Como criar uma OS\n- Como bater o ponto\n- Como emitir uma fatura\n- Como adicionar foto a uma peça\n- Como funciona o caixa\n\nEstou aqui para ajudar!"
-},
