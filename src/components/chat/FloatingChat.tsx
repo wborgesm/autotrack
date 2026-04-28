@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Loader2, Bot, User } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Bot, User, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -14,6 +14,8 @@ export default function FloatingChat() {
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [showAlert, setShowAlert] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,6 +37,8 @@ export default function FloatingChat() {
       });
       const data = await res.json();
       setMensagens(prev => [...prev, { tipo: "bot", texto: data.resposta || "Erro ao obter resposta." }]);
+      setRemaining(data.remaining ?? null);
+      setShowAlert(data.alert === true);
     } catch {
       setMensagens(prev => [...prev, { tipo: "bot", texto: "Erro de rede." }]);
     } finally {
@@ -51,20 +55,17 @@ export default function FloatingChat() {
 
   return (
     <>
-      {/* Botão flutuante */}
       {!aberto && (
         <button
           onClick={() => setAberto(true)}
-          className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-2xl transition-all duration-300 hover:scale-110"
-          title="Assistente AutoTrack"
+          className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-2xl transition-all duration-300 hover:scale-110 flex items-center gap-2"
         >
           <MessageCircle className="h-6 w-6" />
         </button>
       )}
 
-      {/* Janela de chat */}
       {aberto && (
-        <div className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[90vw] h-[500px] max-h-[70vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden transition-all duration-300">
+        <div className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[90vw] h-[520px] max-h-[70vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
           {/* Cabeçalho */}
           <div className="flex items-center justify-between bg-blue-600 text-white px-4 py-3 shrink-0">
             <div className="flex items-center gap-2">
@@ -76,13 +77,24 @@ export default function FloatingChat() {
             </button>
           </div>
 
+          {/* Alerta de limite */}
+          {showAlert && remaining && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/30 border-b border-yellow-200 dark:border-yellow-800 px-4 py-2 flex items-center gap-2 text-yellow-700 dark:text-yellow-300 text-xs">
+              <AlertTriangle className="h-3 w-3" />
+              <span>Restam apenas {remaining} pedidos hoje.</span>
+            </div>
+          )}
+
           {/* Mensagens */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {mensagens.length === 0 && (
-              <div className="text-center text-gray-500 dark:text-gray-400 text-sm mt-4">
+              <div className="text-center text-gray-500 text-sm mt-4">
                 <Bot className="h-8 w-8 mx-auto mb-2 text-blue-600" />
                 <p>👋 Olá! Sou o assistente do AutoTrack.</p>
-                <p className="text-xs mt-1">Pergunta-me como usar qualquer módulo do sistema.</p>
+                <p className="text-xs mt-1">Pergunta-me como usar qualquer módulo.</p>
+                {remaining && remaining <= 50 && (
+                  <p className="text-xs text-red-500 mt-2">⚠️ Apenas {remaining} pedidos restantes hoje.</p>
+                )}
               </div>
             )}
             {mensagens.map((msg, idx) => (
@@ -120,10 +132,11 @@ export default function FloatingChat() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Pergunta algo..."
+              placeholder={remaining && remaining <= 0 ? "Limite diário atingido..." : "Pergunta algo..."}
               className="flex-1 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-sm"
+              disabled={remaining !== null && remaining <= 0}
             />
-            <Button size="sm" onClick={enviar} disabled={loading || !input.trim()} className="bg-blue-600">
+            <Button size="sm" onClick={enviar} disabled={loading || !input.trim() || (remaining !== null && remaining <= 0)} className="bg-blue-600">
               <Send className="h-4 w-4" />
             </Button>
           </div>
