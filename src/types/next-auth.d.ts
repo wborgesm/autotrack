@@ -1,22 +1,6 @@
 import { NivelAcesso } from "@prisma/client";
-import "next-auth";
 
 declare module "next-auth" {
-  interface User {
-    id: string;
-    tenantId: string;
-    nivel: NivelAcesso;
-    avatar?: string | null;
-    plano: string;
-    tenantAtivo: boolean;
-    addons: {
-      gps: boolean;
-      pontos: boolean;
-      whatsapp: boolean;
-      portalCliente: boolean;
-    };
-  }
-
   interface Session {
     user: {
       id: string;
@@ -26,6 +10,7 @@ declare module "next-auth" {
       nivel: NivelAcesso;
       avatar?: string | null;
       plano: string;
+      logo?: string | null;
       tenantAtivo: boolean;
       addons: {
         gps: boolean;
@@ -46,6 +31,27 @@ declare module "next-auth/jwt" {
     nivel: NivelAcesso;
     avatar?: string | null;
     plano: string;
+    logo?: string | null;
+    tenantAtivo: boolean;
+    addons: {
+      gps: boolean;
+      pontos: boolean;
+      whatsapp: boolean;
+      portalCliente: boolean;
+    };
+  }
+}
+
+declare module "next-auth" {
+  interface User {
+    id: string;
+    email: string;
+    name: string;
+    tenantId: string;
+    nivel: string;
+    avatar?: string | null;
+    plano: string;
+    logo?: string | null;
     tenantAtivo: boolean;
     addons: {
       gps: boolean;

@@ -54,6 +54,7 @@ export const authOptions: NextAuthOptions = {
           nivel: user.nivel,
           avatar: user.avatar,
           plano: user.tenant.plano,
+          logo: user.tenant.logo || null,
           tenantAtivo: user.tenant.ativo,
           addons: {
             gps: user.tenant.addonGps,
@@ -72,7 +73,7 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email ?? "";
         token.name = user.name ?? "";
         token.tenantId = user.tenantId;
-        token.nivel = user.nivel;
+        token.nivel = user.nivel as NivelAcesso;
         token.avatar = user.avatar;
         token.plano = user.plano;
         token.tenantAtivo = user.tenantAtivo;
@@ -89,6 +90,7 @@ export const authOptions: NextAuthOptions = {
         session.user.nivel = token.nivel as NivelAcesso;
         session.user.avatar = token.avatar as string | null;
         session.user.plano = token.plano as string;
+        session.user.logo = token.logo as string | null;
         session.user.tenantAtivo = token.tenantAtivo as boolean;
         session.user.addons = token.addons as {
           gps: boolean;

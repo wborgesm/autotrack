@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { podeAtribuirNivel, Recurso } from "@/lib/permissoes";
+import { podeAtribuirNivel } from "@/lib/permissoes";
+import bcrypt from "bcryptjs";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -13,14 +14,8 @@ export async function GET(request: Request) {
   const usuarios = await prisma.usuario.findMany({
     where: { tenantId: session.user.tenantId },
     select: {
-      id: true,
-      nome: true,
-      email: true,
-      nivel: true,
-      ativo: true,
-      createdAt: true,
-      permissoes: true,
-      avatar: true,
+      id: true, nome: true, email: true, nivel: true, ativo: true,
+      createdAt: true, permissoes: true, avatar: true,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -43,12 +38,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Não tens permissão para atribuir esse nível." }, { status: 403 });
     }
 
+    const hash = await bcrypt.hash(senha, 10);
+
     const usuario = await prisma.usuario.create({
       data: {
         tenantId: session.user.tenantId,
         nome,
         email,
-        senha,
+        senha: hash,
         nivel,
         permissoes: permissoes || [],
       },
@@ -80,10 +77,7 @@ export async function PATCH(request: Request) {
 
     const usuario = await prisma.usuario.update({
       where: { id, tenantId: session.user.tenantId },
-      data: {
-        nivel,
-        permissoes,
-      },
+      data: { nivel, permissoes },
     });
 
     return NextResponse.json({ usuario });

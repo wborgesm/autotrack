@@ -163,6 +163,7 @@ model Usuario {
   twoFactorSecret  String?
   permissoes  String[]
   avatar      String?
+  sessoes    Sessao[]
 
   agendamentos Agendamento[]
   ordensServico OrdemServico[]
@@ -708,6 +709,7 @@ model Venda {
   total           Decimal  @db.Decimal(10,2)
   metodoPagamento String
   itens           VendaItem[]
+  pagamentos  Pagamento[]
   usuarioId       String
   createdAt       DateTime @default(now())
 
@@ -815,4 +817,28 @@ model MovimentoStock {
   usuarioId   String?
   usuarioNome String?
   createdAt   DateTime @default(now())
+}
+
+
+
+
+model Pagamento {
+  id          String   @id @default(cuid())
+  vendaId     String
+  venda       Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  metodo      String
+  valor       Float
+  estado      String   @default("pago")
+  referencia  String?
+}
+
+model Sessao {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  usuario   Usuario  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ip        String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
