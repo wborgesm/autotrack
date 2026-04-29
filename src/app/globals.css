@@ -2,44 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
-/* FullCalendar Mobile Responsivo */
-.fc-mobile-responsive .fc {
-  font-size: 0.8rem !important;
-}
-.fc-mobile-responsive .fc-toolbar-title {
-  font-size: 1rem !important;
-}
-.fc-mobile-responsive .fc-button {
-  padding: 0.25rem 0.5rem !important;
-  font-size: 0.75rem !important;
-}
-.fc-mobile-responsive .fc-timegrid-slot {
-  height: 2rem !important;
+/* ========== RADIX UI + TAILWIND DARK MODE ========== */
+@layer base {
+  :root {
+    --background: 255 255 255;
+    --foreground: 15 23 42;
+    --card: 255 255 255;
+    --card-foreground: 15 23 42;
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
+    --primary: 59 130 246;
+    --primary-foreground: 255 255 255;
+    --secondary: 241 245 249;
+    --secondary-foreground: 15 23 42;
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
+    --accent: 241 245 249;
+    --accent-foreground: 15 23 42;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 59 130 246;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 15 23 42;
+    --foreground: 241 245 249;
+    --card: 30 41 59;
+    --card-foreground: 241 245 249;
+    --popover: 30 41 59;
+    --popover-foreground: 241 245 249;
+    --primary: 96 165 250;
+    --primary-foreground: 15 23 42;
+    --secondary: 51 65 85;
+    --secondary-foreground: 241 245 249;
+    --muted: 51 65 85;
+    --muted-foreground: 148 163 184;
+    --accent: 51 65 85;
+    --accent-foreground: 241 245 249;
+    --destructive: 248 113 113;
+    --destructive-foreground: 15 23 42;
+    --border: 51 65 85;
+    --input: 51 65 85;
+    --ring: 96 165 250;
+  }
 }
 
-@media (max-width: 640px) {
-  .fc-mobile-responsive .fc-toolbar {
-    flex-wrap: wrap !important;
-    gap: 0.5rem !important;
-  }
-  .fc-mobile-responsive .fc-toolbar-chunk {
-    display: flex;
-    justify-content: center;
-  }
-  .fc-mobile-responsive .fc-col-header-cell {
-    font-size: 0.7rem !important;
-  }
-  .fc-mobile-responsive .fc-timegrid-slot-label {
-    font-size: 0.65rem !important;
-  }
+/* ========== UTILITÁRIOS GLOBAIS ========== */
+a, button, input, select, textarea {
+  @apply transition-all duration-200 ease-in-out;
 }
 
-/* Dark mode fixes globais */
-.dark .bg-white { background-color: rgb(31 41 55) !important; }
-.dark .text-gray-900 { color: rgb(243 244 246) !important; }
-.dark .text-gray-800 { color: rgb(229 231 235) !important; }
-.dark .text-gray-700 { color: rgb(209 213 219) !important; }
-.dark .border-gray-200 { border-color: rgb(55 65 81) !important; }
-.dark .hover\:bg-gray-100:hover { background-color: rgb(55 65 81) !important; }
-.dark table, .dark th, .dark td { border-color: rgb(55 65 81) !important; }
-.dark .bg-gray-50 { background-color: rgb(31 41 55) !important; }
+/* ========== SCROLL HORIZONTAL EM TABELAS ========== */
+.table-responsive {
+  @apply overflow-x-auto -mx-4 px-4;
+}
+.table-responsive table {
+  @apply w-full min-w-[600px];
+}
+
+/* ========== GLASS EFFECT ========== */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.dark .glass {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+}

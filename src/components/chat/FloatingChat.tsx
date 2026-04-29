@@ -28,6 +28,10 @@ const processando = [
 ];
 
 export default function FloatingChat() {
+
+function processarMarkdown(texto: string): string {
+  return texto.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+}
   const sessionData = useSession();
   const [aberto, setAberto] = useState(false);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);

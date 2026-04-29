@@ -354,7 +354,7 @@ const respostas: RespostaDireta[] = [
     resposta: "De nada! 😊\nEstou sempre aqui para ajudar. Precisas de mais alguma coisa?"
   },
   {
-    chaves: ["ajuda", "help", "socorro", "como usar", "como funciona", "guia", "manual"],
+    chaves: ["ajuda", "help", "socorro", "como usar", "como funciona", "guia", "manual", "aula rapida", "aulas rapidas", "quero aula", "aula"],
     resposta: "Claro! 🚀 O AutoTrack tem vários módulos. Diz-me o que queres fazer:\n\n- **Criar OS** — para ordens de serviço\n- **Caixa** — para vendas rápidas\n- **Stock** — para gerir peças\n- **Agenda** — para marcações\n- **Relatórios** — para análises\n\nOu pergunta diretamente: \"como criar uma OS?\" e eu mostro o passo a passo."
   },
   {
