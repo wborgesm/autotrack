@@ -13,15 +13,21 @@ export async function GET() {
   const sessoes = await prisma.sessao.findMany({
     where: { updatedAt: { gte: cincoMinAtras } },
     include: {
-      usuario: { select: { nome: true, email: true, tenant: { select: { nome: true } } } },
+      usuario: { select: { nome: true, email: true, nivel: true, tenant: { select: { nome: true } } } },
     },
     orderBy: { updatedAt: "desc" },
   });
 
   const resultado = sessoes.map(s => ({
-    ip: s.ip,
+    id: s.id,
     usuario: s.usuario?.nome || s.userId,
+    email: s.usuario?.email || "",
+    nivel: s.usuario?.nivel || "",
     tenant: s.usuario?.tenant?.nome || "Desconhecida",
+    ip: s.ip,
+    browser: s.browser || "Desconhecido",
+    os: s.os || "Desconhecido",
+    userAgent: s.userAgent || "",
     ultimaAtividade: s.updatedAt.toISOString(),
   }));
 

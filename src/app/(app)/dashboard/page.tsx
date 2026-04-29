@@ -1,11 +1,11 @@
 "use client";
-import OnlineUsers from "@/components/OnlineUsers";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { BadgeEstado } from "@/components/ui/BadgeEstado";
 import { TrendingUp, TrendingDown, Minus, AlertTriangle, Wrench, DollarSign, Package, Users, Globe } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import OnlineUsers from "@/components/OnlineUsers";
 
 interface KpiCardProps {
   titulo: string;
@@ -43,12 +43,10 @@ const CORES_ESTADO: Record<string, string> = {
   CANCELADA: "#ef4444",
 };
 
-<OnlineUsers />
 export default function DashboardPage() {
   const { data: session } = useSession();
   const [dados, setDados] = useState<any>(null);
   const [stockCritico, setStockCritico] = useState(0);
-  const [online, setOnline] = useState(0);
 
   useEffect(() => {
     fetch("/api/relatorios/dashboard")
@@ -56,11 +54,8 @@ export default function DashboardPage() {
       .then(d => {
         setDados(d);
         setStockCritico(d.stockCritico || 0);
-        if (session?.user?.nivel === "SUPER_ADMIN") {
-          fetch("/api/online").then(r => r.json()).then(o => setOnline(o.online || 0));
-        }
       });
-  }, [session]);
+  }, []);
 
   if (!dados) return <p className="p-6">A carregar...</p>;
 
@@ -78,7 +73,7 @@ export default function DashboardPage() {
         <KpiCard titulo="Stock Crítico" valor={stockCritico} icone={<Package />} cor="bg-amber-100 text-amber-600" />
         <KpiCard titulo="Técnicos Activos" valor={dados.tecnicosActivos} icone={<Users />} cor="bg-purple-100 text-purple-600" />
         {session?.user?.nivel === "SUPER_ADMIN" && (
-          <KpiCard titulo="Online Agora" valor={online} icone={<Globe className="h-5 w-5" />} cor="bg-green-100 text-green-600" />
+          <KpiCard titulo="Online Agora" valor={0} icone={<Globe className="h-5 w-5" />} cor="bg-green-100 text-green-600" />
         )}
       </div>
 
@@ -131,6 +126,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+      <OnlineUsers />
     </div>
   );
 }

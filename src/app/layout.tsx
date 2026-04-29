@@ -1,29 +1,39 @@
-import FloatingChat from "@/components/chat/FloatingChat";
-import SearchBar from "@/components/layout/SearchBar";
-import VersionCheck from "@/components/providers/VersionCheck";
-import type { Metadata } from "next";
+import { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import AuthProvider from "@/components/providers/AuthProvider";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { Providers } from "@/components/providers/Providers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Autotrack - Sistema de Gestão para Oficinas",
   description: "Gerencie sua oficina com eficiência",
-  icons: { icon: "https://autotrack.pt/gps/img/icat.png" },
+  icons: "https://autotrack.pt/gps/img/icat.png",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession(authOptions);
+  let tenantStyles = {};
+  if (session?.user?.tenantId) {
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: session.user.tenantId },
+      select: { corPrimaria: true, corSecundaria: true },
+    });
+    if (tenant) {
+      tenantStyles = {
+        "--color-primary": tenant.corPrimaria || "#3b82f6",
+        "--color-secondary": tenant.corSecundaria || "#1e40af",
+      };
+    }
+  }
+
   return (
-    <html lang="pt-PT" suppressHydrationWarning>
+    <html lang="pt-PT" style={tenantStyles as any}>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <VersionCheck />
-      <FloatingChat />
-          <AuthProvider>{children}</AuthProvider>
-        </ThemeProvider>
+        <Providers session={session}>{children}</Providers>
       </body>
     </html>
   );

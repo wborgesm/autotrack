@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 export default function OnlineUsers() {
   const { data: session } = useSession();
@@ -10,7 +11,7 @@ export default function OnlineUsers() {
 
   useEffect(() => {
     if (session?.user?.nivel === "SUPER_ADMIN") {
-      fetch("/api/admin/online").then(r => r.json()).then(setDados);
+      fetch("/api/admin/online").then(r => r.json()).then(setDados).catch(() => {});
     }
   }, [session]);
 
@@ -26,15 +27,22 @@ export default function OnlineUsers() {
             <TableRow>
               <TableHead>Usuário</TableHead>
               <TableHead>Oficina</TableHead>
+              <TableHead>Navegador</TableHead>
+              <TableHead>S.O.</TableHead>
               <TableHead>IP</TableHead>
               <TableHead>Última atividade</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(dados.sessoes || []).map((s: any, i: number) => (
-              <TableRow key={i}>
-                <TableCell className="text-xs">{s.usuario}</TableCell>
+            {(dados.sessoes || []).map((s: any) => (
+              <TableRow key={s.id}>
+                <TableCell className="text-xs">
+                  <span className="font-medium">{s.usuario}</span>
+                  <Badge variant="outline" className="ml-1 text-[10px]">{s.nivel}</Badge>
+                </TableCell>
                 <TableCell className="text-xs">{s.tenant}</TableCell>
+                <TableCell className="text-xs">{s.browser}</TableCell>
+                <TableCell className="text-xs">{s.os}</TableCell>
                 <TableCell className="text-xs font-mono">{s.ip}</TableCell>
                 <TableCell className="text-xs">{new Date(s.ultimaAtividade).toLocaleTimeString("pt-PT")}</TableCell>
               </TableRow>

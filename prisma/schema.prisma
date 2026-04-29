@@ -95,6 +95,8 @@ model Tenant {
   email             String?
   endereco          String?
   logo              String?
+  corPrimaria      String      @default("#3b82f6")
+  corSecundaria    String      @default("#1e40af")
   plano             Plano         @default(STARTER)
   ativo             Boolean       @default(true)
   twoFactorEnabled Boolean @default(false)
@@ -839,6 +841,8 @@ model Sessao {
   usuario   Usuario  @relation(fields: [userId], references: [id], onDelete: Cascade)
   ip        String
   userAgent String?
+  os         String?
+  browser    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
