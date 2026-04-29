@@ -105,3 +105,36 @@ Sistema SaaS de gestão para oficinas mecânicas. Multi-tenant, cada empresa (of
 - **Modo claro** é o padrão para todos os utilizadores.
 - O **modo escuro** pode ser ativado manualmente no toggle (🌙/☀️) do header.
 - Corrigidos bugs visuais que ocorriam com dark mode automático.
+
+---
+
+## 🛒 POS Completo (29 Abril 2026)
+
+- **Abertura de caixa** com saldo inicial validado.
+- **Itens livres** (serviços/mão‑de‑obra) com nome e valor manual.
+- **Split payment** com múltiplos métodos (dinheiro, cartão, MB WAY, transferência, ref. MB).
+- **Cálculo automático de troco** e validação de "falta pagar".
+- **Pesquisa inteligente** de produtos do stock por nome ou código.
+- **Atualização automática de stock** para itens do inventário.
+
+## 🔐 Permissões refinadas
+
+- SUPER_ADMIN pode escolher a empresa ao criar um utilizador.
+- ADMIN cria utilizadores automaticamente vinculados ao seu tenant.
+- Configurações da empresa visíveis para todos, mas editáveis apenas por GERENTE ou superior.
+- SUPER_ADMIN pode apagar utilizadores, revogar sessões e assumir identidade (login como).
+
+## 🎨 Interface
+
+- **Modo claro** como padrão; dark mode disponível no toggle.
+- **Efeito glass** nos cards e diálogos (backdrop‑filter).
+- **Sidebar responsiva** com drawer em mobile.
+- **Logo da oficina** personalizável via upload nas Configurações.
+- **Dashboard** com KPIs de tendência, alerta de stock crítico, últimos OS e utilizadores online (SUPER_ADMIN).
+
+## 🛠️ Infraestrutura
+
+- Deploy com **zero downtime** usando script atómico e PM2.
+- Cache de IA (ChatCache) para evitar chamadas repetidas ao Gemini.
+- Pesquisa web integrada (DuckDuckGo) apenas para temas do AutoTrack.
+- Build temporária movida para `/tmp` para evitar ficheiros grandes no Git.
