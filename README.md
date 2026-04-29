@@ -97,3 +97,11 @@ Sistema SaaS de gestão para oficinas mecânicas. Multi-tenant, cada empresa (of
 - **Badge Beta** — aviso permanente no chat: "⚡ Chat em versão Beta — pode cometer erros."
 - **Página de clientes** — correção de `map is not a function` (API híbrida array/objeto)
 - **Permissões** — ajustes na página de utilizadores (função `revogarSessoes` unificada)
+
+---
+
+## 🎨 Interface — Modo Claro Padrão (29 Abril 2026)
+
+- **Modo claro** é o padrão para todos os utilizadores.
+- O **modo escuro** pode ser ativado manualmente no toggle (🌙/☀️) do header.
+- Corrigidos bugs visuais que ocorriam com dark mode automático.
