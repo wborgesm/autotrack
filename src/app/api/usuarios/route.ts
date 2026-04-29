@@ -7,20 +7,38 @@ import bcrypt from "bcryptjs";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.tenantId) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  // SUPER_ADMIN vê todos os utilizadores de todos os tenants
+  const isSuperAdmin = session.user.nivel === "SUPER_ADMIN";
+  const where = isSuperAdmin ? {} : { tenantId: session.user.tenantId };
+
   const usuarios = await prisma.usuario.findMany({
-    where: { tenantId: session.user.tenantId },
+    where,
     select: {
-      id: true, nome: true, email: true, nivel: true, ativo: true,
-      createdAt: true, permissoes: true, avatar: true,
+      id: true,
+      nome: true,
+      email: true,
+      nivel: true,
+      ativo: true,
+      createdAt: true,
+      permissoes: true,
+      avatar: true,
+      tenant: { select: { nome: true } },
     },
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(usuarios);
+  // Formata para incluir o nome da oficina diretamente no objeto
+  const resultado = usuarios.map(u => ({
+    ...u,
+    oficina: u.tenant?.nome || "—",
+    tenant: undefined, // remove o objeto nested para simplificar no frontend
+  }));
+
+  return NextResponse.json(resultado);
 }
 
 export async function POST(request: Request) {
@@ -38,11 +56,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Não tens permissão para atribuir esse nível." }, { status: 403 });
     }
 
+    const tenantId = (criadorNivel === "SUPER_ADMIN" && body.tenantId) ? body.tenantId : session.user.tenantId;
     const hash = await bcrypt.hash(senha, 10);
 
     const usuario = await prisma.usuario.create({
       data: {
-        tenantId: session.user.tenantId,
+        tenantId,
         nome,
         email,
         senha: hash,
@@ -75,8 +94,14 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Não tens permissão para atribuir esse nível." }, { status: 403 });
     }
 
+    // SUPER_ADMIN pode editar qualquer usuário; outros apenas dentro do seu tenant
+    const where: any = { id };
+    if (criadorNivel !== "SUPER_ADMIN") {
+      where.tenantId = session.user.tenantId;
+    }
+
     const usuario = await prisma.usuario.update({
-      where: { id, tenantId: session.user.tenantId },
+      where,
       data: { nivel, permissoes },
     });
 
@@ -96,9 +121,12 @@ export async function DELETE(request: Request) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
 
-  const alvo = await prisma.usuario.findUnique({
-    where: { id, tenantId: session.user.tenantId },
-  });
+  const where: any = { id };
+  if (criadorNivel !== "SUPER_ADMIN") {
+    where.tenantId = session.user.tenantId;
+  }
+
+  const alvo = await prisma.usuario.findUnique({ where });
   if (!alvo) return NextResponse.json({ error: "Utilizador não encontrado" }, { status: 404 });
 
   if (criadorNivel !== "SUPER_ADMIN" && !podeAtribuirNivel(criadorNivel, alvo.nivel)) {

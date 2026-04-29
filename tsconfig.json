@@ -32,7 +32,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next-tmp/types/**/*.ts"
+    ".next-tmp/types/**/*.ts",
+    "/tmp/autotrack-build/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
