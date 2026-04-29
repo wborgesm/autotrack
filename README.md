@@ -75,3 +75,15 @@ Sistema SaaS de gestão para oficinas mecânicas. Multi-tenant, cada empresa (of
 - Referências a "Traccar" substituídas por "Autotrack" na interface do cliente
 - Cache de respostas da IA para reduzir latência e custos
 - Deploy com zero downtime mantido via PM2 (cluster mode)
+
+---
+
+## 🎨 Interface moderna (29 Abril 2026)
+
+- **CSS variables do Radix UI** integradas com Tailwind — dark mode funcional em todos os componentes (dialogs, dropdowns, calendário)
+- **Tokens de design** definidos em `tailwind.config.ts` (cores da marca, sombras suaves, border-radius 2xl/3xl)
+- **Fundo com gradiente suave** e transições em todos os elementos interactivos
+- **AppShell responsivo** com sidebar drawer em mobile e overlay
+- **Header com toggle de tema** (🌙/☀️) e notificações
+- **Tabelas com scroll horizontal** em ecrãs pequenos (utilitário `table-responsive`)
+- **Efeito glass** disponível via classe utilitária (`glass`) para cards e diálogos
