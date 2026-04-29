@@ -87,3 +87,13 @@ Sistema SaaS de gestão para oficinas mecânicas. Multi-tenant, cada empresa (of
 - **Header com toggle de tema** (🌙/☀️) e notificações
 - **Tabelas com scroll horizontal** em ecrãs pequenos (utilitário `table-responsive`)
 - **Efeito glass** disponível via classe utilitária (`glass`) para cards e diálogos
+
+---
+
+## 🛠️ Correções recentes (29 Abril 2026)
+
+- **Chatbot** — matching corrigido para evitar confusão entre "ponto" e "caixa", remoção de artefactos markdown (`**`) da pergunta, saudação personalizada mantida
+- **Super Admin** — texto substituído por "Autotrack" nas respostas visíveis ao cliente
+- **Badge Beta** — aviso permanente no chat: "⚡ Chat em versão Beta — pode cometer erros."
+- **Página de clientes** — correção de `map is not a function` (API híbrida array/objeto)
+- **Permissões** — ajustes na página de utilizadores (função `revogarSessoes` unificada)
