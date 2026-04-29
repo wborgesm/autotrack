@@ -48,7 +48,7 @@ export default function TesteSMSPage() {
     <div className="p-6 max-w-xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Teste de Envio de SMS</h1>
       <Card>
-        <CardHeader><CardTitle>Gateway Traccar SMS</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Gateway Autotrack SMS</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div>
             <Label>Telefone</Label>

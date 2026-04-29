@@ -1,10 +1,12 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { MessageCircle, X, Send, Loader2, Bot, User, Brain, ThumbsUp, ThumbsDown, FlaskConical, ChevronRight, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { saudacoes, processando, aleatorio } from "@/lib/chatbot-frases";
+import { saudacoes, aleatorio } from "@/lib/chatbot-frases";
+import { chatbotResposta, ChatContexto } from "@/lib/chatbot-simple";
 
 interface Mensagem {
   tipo: "user" | "bot";
@@ -12,21 +14,33 @@ interface Mensagem {
   fonte?: "conhecimento" | "gemini";
   avaliada?: boolean;
   sugestoes?: string[];
+  pesquisaDisponivel?: boolean;
+  queryPesquisa?: string;
+  pesquisando?: boolean;
 }
 
+const processando = [
+  "Um momento, por favor... ⏳",
+  "A tratar disso...",
+  "Já estou a verificar...",
+  "Só um instante...",
+  "A pensar... 🤔",
+];
+
 export default function FloatingChat() {
+  const sessionData = useSession();
   const [aberto, setAberto] = useState(false);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [falhasSeguidas, setFalhasSeguidas] = useState(0);
+  const [contexto, setContexto] = useState<ChatContexto>({});
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens]);
 
-  // Saudação ao abrir
   useEffect(() => {
     if (aberto && mensagens.length === 0) {
       setMensagens([{
@@ -50,6 +64,28 @@ export default function FloatingChat() {
     }
   };
 
+  const pesquisarWeb = async (query: string, msgIdx: number) => {
+    setMensagens(prev => prev.map((m, i) => i === msgIdx ? { ...m, pesquisando: true, pesquisaDisponivel: false } : m));
+    try {
+      const res = await fetch("/api/chatbot/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+      const data = await res.json();
+      setMensagens(prev => [
+        ...prev.map((m, i) => i === msgIdx ? { ...m, pesquisando: false } : m),
+        {
+          tipo: "bot",
+          texto: data.resposta || "Sem resultados.",
+          fonte: "conhecimento",
+        }
+      ]);
+    } catch {
+      setMensagens(prev => prev.map((m, i) => i === msgIdx ? { ...m, pesquisando: false } : m));
+    }
+  };
+
   const enviar = async (forcarIA: boolean = false) => {
     if (!input.trim() && !forcarIA) return;
     const pergunta = forcarIA ? mensagens[mensagens.length - 1]?.texto || input : input;
@@ -62,45 +98,46 @@ export default function FloatingChat() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/chatbot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pergunta, usarIA: forcarIA ? true : false }),
-      });
-      const data = await res.json();
-      
-      setMensagens(prev => [...prev, {
-        tipo: "bot",
-        texto: formatarMensagem(data.resposta || "Erro ao obter resposta."),
-        fonte: data.fonte || "conhecimento",
-        sugestoes: data.sugestoes || []
-      }]);
-      
-      if (data.precisaIA === true) {
-        setFalhasSeguidas(prev => prev + 1);
-        if (falhasSeguidas >= 2) {
-          setTimeout(() => {
-            setMensagens(prev => [...prev, { tipo: "bot", texto: "🔄 A pesquisar com IA avançada...", fonte: "gemini" }]);
-            enviar(true);
-          }, 500);
-        }
-      } else {
+      if (forcarIA) {
+        const res = await fetch("/api/chatbot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pergunta, usarIA: true }),
+        });
+        const data = await res.json();
+        setMensagens(prev => [...prev, {
+          tipo: "bot",
+          texto: data.resposta || "Erro ao obter resposta.",
+          fonte: data.fonte || "gemini",
+          sugestoes: data.sugestoes || []
+        }]);
         setFalhasSeguidas(0);
+      } else {
+        const resultado = chatbotResposta(pergunta, contexto, sessionData?.data?.user?.name || undefined);
+        setMensagens(prev => [...prev, {
+          tipo: "bot",
+          texto: resultado.resposta,
+          fonte: "conhecimento",
+          sugestoes: resultado.proximoContexto ? ["Próximo"] : undefined,
+          pesquisaDisponivel: resultado.pesquisaDisponivel,
+          queryPesquisa: resultado.queryPesquisa,
+        }]);
+        if (resultado.proximoContexto) setContexto(resultado.proximoContexto);
+        if (resultado.precisaIA) {
+          setFalhasSeguidas(prev => prev + 1);
+          if (falhasSeguidas >= 2) {
+            setTimeout(() => {
+              setMensagens(prev => [...prev, { tipo: "bot", texto: "🔄 A pesquisar com IA avançada...", fonte: "gemini" }]);
+              enviar(true);
+            }, 500);
+          }
+        } else setFalhasSeguidas(0);
       }
     } catch (e) {
       setMensagens(prev => [...prev, { tipo: "bot", texto: "Erro de rede.", fonte: "conhecimento" }]);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Formata a mensagem com estilos visuais
-  const formatarMensagem = (texto: string): string => {
-    return texto
-      // Destacar passos numerados
-      .replace(/^(\d+)\.\s\*\*(.+?)\*\*/gm, '🔹 **$1. $2**')
-      // Destacar dicas
-      .replace(/💡\s\*\*Dica:\*\*/g, '💡 **Dica:**');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -112,31 +149,22 @@ export default function FloatingChat() {
 
   const handleSugestao = (sugestao: string) => {
     setInput(sugestao);
-    enviar();
+    setTimeout(() => enviar(), 50);
   };
 
   const renderMensagem = (msg: Mensagem, idx: number) => {
     const isBot = msg.tipo === "bot";
     const isUser = msg.tipo === "user";
     const isGemini = msg.fonte === "gemini";
-    
-    // Extrair passos, dicas e sugestões da mensagem
     const linhas = msg.texto.split('\n');
     const passos: string[] = [];
     const outrasLinhas: string[] = [];
     let dica = "";
-    let sugestoesTexto = "";
-    
     for (const linha of linhas) {
-      if (/^\d+\.\s/.test(linha) || /^🔹\s/.test(linha)) {
-        passos.push(linha.replace(/^🔹\s/, ''));
-      } else if (linha.startsWith('💡')) {
-        dica = linha;
-      } else {
-        outrasLinhas.push(linha);
-      }
+      if (/^\d+\.\s/.test(linha) || /^🔹\s/.test(linha)) passos.push(linha.replace(/^🔹\s/, ''));
+      else if (linha.startsWith('💡')) dica = linha;
+      else outrasLinhas.push(linha);
     }
-    
     const textoPrincipal = outrasLinhas.join('\n').trim();
 
     return (
@@ -148,18 +176,9 @@ export default function FloatingChat() {
             </div>
           )}
           <div className={`rounded-2xl px-3 py-2 max-w-[85%] text-sm ${
-            isUser
-              ? "bg-blue-600 text-white"
-              : isGemini
-              ? "bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 text-gray-900 dark:text-white"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
+            isUser ? "bg-blue-600 text-white" : isGemini ? "bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 text-gray-900 dark:text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
           }`}>
-            {/* Texto principal */}
-            {textoPrincipal && (
-              <p className="whitespace-pre-wrap text-xs mb-2">{textoPrincipal}</p>
-            )}
-            
-            {/* Bloco de passos */}
+            {textoPrincipal && <p className="whitespace-pre-wrap text-xs mb-2">{textoPrincipal}</p>}
             {passos.length > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-lg p-2 mb-2 border border-gray-200 dark:border-gray-600">
                 {passos.map((passo, i) => (
@@ -170,19 +189,13 @@ export default function FloatingChat() {
                 ))}
               </div>
             )}
-            
-            {/* Dica */}
             {dica && (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-2 mb-2 border border-yellow-200 dark:border-yellow-800 flex items-start gap-2">
                 <Lightbulb className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-400 mt-0.5 shrink-0" />
                 <span className="text-xs text-yellow-700 dark:text-yellow-300">{dica.replace('💡 ', '')}</span>
               </div>
             )}
-            
-            {/* Fonte IA */}
-            {isGemini && (
-              <p className="text-[10px] text-purple-500 mt-1">🤖 Resposta via IA (Gemini)</p>
-            )}
+            {isGemini && <p className="text-[10px] text-purple-500 mt-1">🤖 Resposta via IA (Gemini)</p>}
           </div>
           {isUser && (
             <div className="bg-blue-600 rounded-full p-1.5 shrink-0 mt-1">
@@ -191,44 +204,37 @@ export default function FloatingChat() {
           )}
         </div>
         
-        {/* Sugestões clicáveis */}
+        {/* Sugestões */}
         {isBot && msg.sugestoes && msg.sugestoes.length > 0 && (
           <div className="flex flex-wrap gap-1.5 ml-10 mt-1">
             {msg.sugestoes.map((sugestao, i) => (
-              <button
-                key={i}
-                onClick={() => handleSugestao(sugestao)}
-                className="text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 rounded-full px-3 py-1 transition-colors flex items-center gap-1"
-              >
-                {sugestao}
-                <ChevronRight className="h-3 w-3" />
+              <button key={i} onClick={() => handleSugestao(sugestao)} className="text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 rounded-full px-3 py-1 transition-colors flex items-center gap-1">
+                {sugestao} <ChevronRight className="h-3 w-3" />
               </button>
             ))}
           </div>
         )}
-        
-        {/* Botões de avaliação */}
-        {isBot && !msg.avaliada && idx > 0 && (
-          <div className="flex items-center gap-2 ml-10 mt-1">
-            <button
-              onClick={() => avaliar(idx, true)}
-              className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-              title="Útil"
-            >
-              <ThumbsUp className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => avaliar(idx, false)}
-              className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-              title="Não útil"
-            >
-              <ThumbsDown className="h-3.5 w-3.5" />
-            </button>
+
+        {/* Pesquisa web */}
+        {msg.pesquisando && (
+          <div className="flex items-center gap-2 text-xs text-gray-400 ml-10 mt-1">
+            <span className="animate-spin">⏳</span> A pesquisar na internet...
           </div>
         )}
-        {isBot && msg.avaliada && (
-          <p className="text-[10px] text-gray-400 ml-10 mt-1">Obrigado pelo feedback!</p>
+        {msg.pesquisaDisponivel && !msg.pesquisando && (
+          <button onClick={() => pesquisarWeb(msg.queryPesquisa!, idx)} className="flex items-center gap-1.5 text-xs bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 px-3 py-1.5 rounded-full hover:bg-orange-100 dark:hover:bg-orange-800 transition-colors mt-1 ml-10">
+            🔍 Pesquisar "{msg.queryPesquisa?.slice(0, 30)}{msg.queryPesquisa && msg.queryPesquisa.length > 30 ? '...' : ''}"
+          </button>
         )}
+
+        {/* Avaliação */}
+        {isBot && !msg.avaliada && idx > 0 && (
+          <div className="flex items-center gap-2 ml-10 mt-1">
+            <button onClick={() => avaliar(idx, true)} className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="Útil"><ThumbsUp className="h-3.5 w-3.5" /></button>
+            <button onClick={() => avaliar(idx, false)} className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="Não útil"><ThumbsDown className="h-3.5 w-3.5" /></button>
+          </div>
+        )}
+        {isBot && msg.avaliada && <p className="text-[10px] text-gray-400 ml-10 mt-1">Obrigado pelo feedback!</p>}
       </div>
     );
   };
@@ -236,67 +242,34 @@ export default function FloatingChat() {
   return (
     <>
       {!aberto && (
-        <button
-          onClick={() => setAberto(true)}
-          className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-2xl transition-all duration-300 hover:scale-110"
-        >
+        <button onClick={() => setAberto(true)} className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-2xl transition-all duration-300 hover:scale-110">
           <MessageCircle className="h-6 w-6" />
         </button>
       )}
-
       {aberto && (
         <div className="fixed bottom-6 right-6 z-50 w-[420px] max-w-[92vw] h-[600px] max-h-[80vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
-          {/* Cabeçalho */}
           <div className="flex items-center justify-between bg-blue-600 text-white px-4 py-3 shrink-0">
             <div className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
               <span className="font-semibold text-sm">Assistente AutoTrack</span>
-              <Badge className="bg-yellow-500 text-yellow-900 text-[10px] px-1.5 py-0 ml-1 flex items-center gap-1">
-                <FlaskConical className="h-3 w-3" /> BETA
-              </Badge>
+              <Badge className="bg-yellow-500 text-yellow-900 text-[10px] px-1.5 py-0 ml-1 flex items-center gap-1"><FlaskConical className="h-3 w-3" /> BETA</Badge>
             </div>
-            <button onClick={() => setAberto(false)} className="hover:bg-blue-700 rounded-full p-1">
-              <X className="h-4 w-4" />
-            </button>
+            <button onClick={() => setAberto(false)} className="hover:bg-blue-700 rounded-full p-1"><X className="h-4 w-4" /></button>
           </div>
-
-          {/* Mensagens */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {mensagens.map((msg, idx) => renderMensagem(msg, idx))}
-            {loading && (
-              <div className="flex items-center gap-2 text-gray-500 text-sm pl-8">
-                <Loader2 className="h-4 w-4 animate-spin" /> {aleatorio(processando)}
-              </div>
-            )}
+            {loading && <div className="flex items-center gap-2 text-gray-500 text-sm pl-8"><Loader2 className="h-4 w-4 animate-spin" /> {aleatorio(processando)}</div>}
             <div ref={scrollRef} />
           </div>
-
-          {/* Input com sugestões rápidas */}
           <div className="p-3 border-t border-gray-200 dark:border-gray-700 shrink-0 space-y-2">
-            {/* Sugestões rápidas */}
             <div className="flex flex-wrap gap-1.5">
               {["Criar OS", "Bater ponto", "Emitir fatura", "Ver stock", "Caixa"].map(sugestao => (
-                <button
-                  key={sugestao}
-                  onClick={() => handleSugestao(sugestao)}
-                  className="text-[10px] bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full px-2.5 py-0.5 transition-colors"
-                >
-                  {sugestao}
-                </button>
+                <button key={sugestao} onClick={() => handleSugestao(sugestao)} className="text-[10px] bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full px-2.5 py-0.5 transition-colors">{sugestao}</button>
               ))}
             </div>
-            {/* Campo de texto */}
             <div className="flex gap-2">
-              <Input
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Pergunta algo..."
-                className="flex-1 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-sm rounded-full"
-              />
-              <Button size="sm" onClick={() => enviar()} disabled={loading || !input.trim()} className="bg-blue-600 rounded-full">
-                <Send className="h-4 w-4" />
-              </Button>
+              <Input value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Pergunta algo..." className="flex-1 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-sm rounded-full" />
+              <Button size="sm" onClick={() => enviar()} disabled={loading || !input.trim()} className="bg-blue-600 rounded-full"><Send className="h-4 w-4" /></Button>
             </div>
           </div>
         </div>

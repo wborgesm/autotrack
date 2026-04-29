@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { TraccarService } from "@/lib/traccar";
+import { AutotrackService } from "@/lib/traccar";
 import { z } from "zod";
 
 export async function GET(req: NextRequest) {
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   if (!server) return NextResponse.json({ error: "Servidor não encontrado" }, { status: 404 });
 
   try {
-    const service = new TraccarService(server);
+    const service = new AutotrackService(server);
 
     if (action === "test") {
       const ok = await service.testConnection();

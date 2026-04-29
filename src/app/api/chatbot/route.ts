@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { chatbotResposta } from "@/lib/chatbot-simple";
 import { chatbotResposta as chatbotGemini } from "@/lib/chatbot-gemini";
+import { getCachedResposta, setCachedResposta } from "@/lib/chatbot-cache";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -16,22 +17,31 @@ export async function POST(req: NextRequest) {
 
   let resposta: string;
   let fonte: string;
-  let util: boolean | null = null;
+  let matched: boolean;
 
   if (usarIA === true) {
-    resposta = await chatbotGemini(pergunta, {
-      nome: session.user.name || "Utilizador",
-      nivel: session.user.nivel || "CLIENTE",
-    });
+    // Verificar cache antes de chamar a IA
+    const cached = await getCachedResposta(pergunta);
+    if (cached) {
+      resposta = cached;
+      console.log("Cache hit para:", pergunta);
+    } else {
+      resposta = await chatbotGemini(pergunta, {
+        nome: session.user.name || "Utilizador",
+        nivel: session.user.nivel || "CLIENTE",
+      });
+      await setCachedResposta(pergunta, resposta);
+    }
     fonte = "gemini";
+    matched = false;
   } else {
     const resultado = chatbotResposta(pergunta);
     resposta = resultado.resposta;
     fonte = "conhecimento";
-    util = !resultado.precisaIA;
+    matched = true;
   }
 
-  // Registar log (assíncrono, não bloqueia a resposta)
+  // Registar log com o campo matched
   prisma.chatLog.create({
     data: {
       tenantId: session.user.tenantId,
@@ -39,15 +49,16 @@ export async function POST(req: NextRequest) {
       usuarioNome: session.user.name || "Anónimo",
       nivel: session.user.nivel,
       pergunta,
-      resposta: resposta.substring(0, 1000), // limita tamanho
+      resposta: resposta.substring(0, 1000),
       fonte,
-      util,
+      matched,
+      util: matched ? true : null, // se veio das regras, assume-se útil; senão, sem feedback
     },
   }).catch(err => console.error("Erro ao gravar log do chat:", err));
 
   return NextResponse.json({
     resposta,
     fonte,
-    precisaIA: fonte === "conhecimento" ? util === false : false,
+    precisaIA: !matched,
   });
 }

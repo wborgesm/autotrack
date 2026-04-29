@@ -1,17 +1,17 @@
-interface TraccarConfig {
+interface AutotrackConfig {
   url: string;
   port: number;
   username: string;
   password: string;
 }
 
-export class TraccarService {
+export class AutotrackService {
   private baseUrl: string;
   private port: number;
   private username: string;
   private password: string;
 
-  constructor(config: TraccarConfig) {
+  constructor(config: AutotrackConfig) {
     this.baseUrl = config.url.replace(/\/$/, "");
     this.port = config.port || 443;
     this.username = config.username;
@@ -34,7 +34,7 @@ export class TraccarService {
     const res = await fetch(url, { ...options, headers: { ...this.headers, ...options?.headers } });
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Traccar API error (${res.status}): ${text}`);
+      throw new Error(`Autotrack API error (${res.status}): ${text}`);
     }
     if (res.status === 204) return {} as T;
     return res.json();

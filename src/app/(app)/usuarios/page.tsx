@@ -8,14 +8,19 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, User, Shield, Mail, Calendar } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, User, Shield, Mail, Calendar, Edit } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { recursosExtrasDisponiveis, NIVEIS_CRIAVEIS, Recurso } from "@/lib/permissoes";
 
 export default function UsuariosPage() {
   const { data: session } = useSession();
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editUser, setEditUser] = useState<any>(null);
   const [form, setForm] = useState({ nome: "", email: "", senha: "", nivel: "GERENTE" });
+  const [editForm, setEditForm] = useState({ nivel: "", permissoesExtras: [] as string[] });
 
   const fetchUsuarios = () => {
     fetch("/api/usuarios")
@@ -36,6 +41,35 @@ export default function UsuariosPage() {
     else { const err = await res.json(); alert(err.error || "Erro ao criar utilizador"); }
   };
 
+  const handleEditOpen = (user: any) => {
+    setEditUser(user);
+    setEditForm({
+      nivel: user.nivel,
+      permissoesExtras: user.permissoesExtras || [],
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!editUser) return;
+    const res = await fetch("/api/usuarios", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: editUser.id,
+        nivel: editForm.nivel,
+        permissoesExtras: editForm.permissoesExtras,
+      }),
+    });
+    if (res.ok) {
+      setEditDialogOpen(false);
+      fetchUsuarios();
+    } else {
+      const err = await res.json();
+      alert(err.error || "Erro ao atualizar");
+    }
+  };
+
   const nivelColor = (nivel: string) => {
     switch (nivel) {
       case "SUPER_ADMIN": return "bg-red-600 text-white";
@@ -48,6 +82,18 @@ export default function UsuariosPage() {
   };
 
   const podeCriar = session?.user?.nivel === "SUPER_ADMIN" || session?.user?.nivel === "ADMIN";
+  const criadorNivel = session?.user?.nivel as string;
+  const niveisPermitidos = NIVEIS_CRIAVEIS[criadorNivel as keyof typeof NIVEIS_CRIAVEIS] || [];
+
+  // Recursos disponíveis para o nível selecionado no diálogo de edição
+  const extrasDisponiveis = recursosExtrasDisponiveis(editForm.nivel as any);
+  const toggleExtra = (recurso: string) => {
+    setEditForm(prev => {
+      const list = prev.permissoesExtras || [];
+      if (list.includes(recurso)) return { ...prev, permissoesExtras: list.filter(r => r !== recurso) };
+      else return { ...prev, permissoesExtras: [...list, recurso] };
+    });
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -72,15 +118,9 @@ export default function UsuariosPage() {
                   <Select value={form.nivel} onValueChange={v => setForm({...form, nivel: v})}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="GERENTE">Gerente</SelectItem>
-                      <SelectItem value="TECNICO">Técnico</SelectItem>
-                      <SelectItem value="RECEPCIONISTA">Recepcionista</SelectItem>
-                      {session?.user?.nivel === "SUPER_ADMIN" && (
-                        <>
-                          <SelectItem value="ADMIN">Admin (Empresa)</SelectItem>
-                          <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
-                        </>
-                      )}
+                      {niveisPermitidos.map(nivel => (
+                        <SelectItem key={nivel} value={nivel}>{nivel}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -93,12 +133,26 @@ export default function UsuariosPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {usuarios.map((u: any) => (
-          <Card key={u.id} className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <Card
+            key={u.id}
+            className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+            onClick={() => handleEditOpen(u)}
+          >
             <div className={`p-4 text-white ${nivelColor(u.nivel)}`}>
               <div className="flex items-center justify-between">
-                <div className="bg-white/20 rounded-full p-3">
-                  <User className="h-6 w-6" />
-                </div>
+            {u.avatar ? (
+
+              <img src={u.avatar} alt={u.nome} className="w-12 h-12 rounded-full object-cover border-2 border-white/50" />
+
+            ) : (
+
+              <div className="bg-white/20 rounded-full p-3">
+
+                <User className="h-6 w-6" />
+
+              </div>
+
+            )}
                 <Badge className="bg-white/20 text-white border-0">{u.nivel}</Badge>
               </div>
               <h3 className="text-lg font-bold mt-3">{u.nome}</h3>
@@ -113,16 +167,63 @@ export default function UsuariosPage() {
               <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
                 <Shield className="h-4 w-4" /> {u.ativo ? "Ativo" : "Inativo"}
               </p>
+              <div className="flex justify-end">
+                <Edit className="h-4 w-4 text-gray-400" />
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
       {usuarios.length === 0 && (
         <div className="text-center py-12 text-gray-400">
           <User className="h-12 w-12 mx-auto mb-2" />
           <p>Nenhum utilizador encontrado</p>
         </div>
       )}
+
+      {/* Diálogo de edição de permissões */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar {editUser?.nome}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nível</Label>
+              <Select
+                value={editForm.nivel}
+                onValueChange={v => setEditForm(prev => ({ ...prev, nivel: v, permissoesExtras: [] }))}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {niveisPermitidos.map(nivel => (
+                    <SelectItem key={nivel} value={nivel}>{nivel}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {extrasDisponiveis.length > 0 && (
+              <div>
+                <Label className="mb-2 block">Permissões extras (adicionais ao nível base)</Label>
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded p-2">
+                  {extrasDisponiveis.map(recurso => (
+                    <div key={recurso} className="flex items-center gap-2">
+                      <Checkbox
+                        checked={editForm.permissoesExtras?.includes(recurso)}
+                        onCheckedChange={() => toggleExtra(recurso)}
+                      />
+                      <span className="text-sm">{recurso}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <Button onClick={handleEditSave} className="w-full">Guardar alterações</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -161,6 +161,7 @@ model Usuario {
   ativo       Boolean     @default(true)
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
+  permissoesExtras String[]
   avatar      String?
 
   agendamentos Agendamento[]
@@ -787,9 +788,17 @@ model ChatLog {
   pergunta  String
   resposta  String?
   fonte     String?  // "conhecimento", "gemini", "fallback"
+  matched   Boolean?
   util      Boolean? // se a resposta foi útil (do conhecimento)
   createdAt DateTime @default(now())
 
   @@index([tenantId, createdAt])
   @@map("chat_logs")
+}
+
+model ChatCache {
+  id        String   @id @default(cuid())
+  pergunta  String   @unique
+  resposta  String
+  createdAt DateTime @default(now())
 }

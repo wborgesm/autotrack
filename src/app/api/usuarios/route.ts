@@ -1,77 +1,105 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import { NivelAcesso } from "@prisma/client";
+import { podeAtribuirNivel, recursosExtrasDisponiveis, Recurso } from "@/lib/permissoes";
 
-export async function GET(req: NextRequest) {
+export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-
-  const nivel = session.user.nivel;
-  const tenantId = session.user.tenantId;
-
-  // SUPER_ADMIN vê todos os utilizadores de todos os tenants
-  if (nivel === "SUPER_ADMIN") {
-    const usuarios = await prisma.usuario.findMany({
-      select: { id: true, nome: true, email: true, nivel: true, ativo: true, tenantId: true, createdAt: true },
-      orderBy: { nome: "asc" },
-    });
-    return NextResponse.json(usuarios);
+  if (!session?.user?.tenantId) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
+  const criadorNivel = session.user.nivel as any;
 
-  // ADMIN vê apenas utilizadores do seu tenant (exceto SUPER_ADMIN)
-  if (nivel === "ADMIN" && tenantId) {
-    const usuarios = await prisma.usuario.findMany({
-      where: {
-        tenantId,
-        nivel: { not: "SUPER_ADMIN" }, // esconde o SUPER_ADMIN do ADMIN
+  try {
+    const body = await request.json();
+    const { nome, email, senha, nivel, permissoesExtras } = body;
+
+    // 1. Validar nível permitido
+    if (!nivel || (criadorNivel !== "SUPER_ADMIN" && !podeAtribuirNivel(criadorNivel, nivel))) {
+      return NextResponse.json({ error: "Não tens permissão para atribuir esse nível." }, { status: 403 });
+    }
+
+    // 2. Validar permissões extra (apenas as disponíveis para o nível)
+    const extrasValidos = recursosExtrasDisponiveis(nivel);
+    const extrasFiltrados = (permissoesExtras || []).filter((r: string) => extrasValidos.includes(r as Recurso));
+
+    // 3. Criar utilizador
+    const usuario = await prisma.usuario.create({
+      data: {
+        tenantId: session.user.tenantId,
+        nome,
+        email,
+        senha,
+        nivel,
+        permissoesExtras: extrasFiltrados,
       },
-      select: { id: true, nome: true, email: true, nivel: true, ativo: true, createdAt: true },
-      orderBy: { nome: "asc" },
     });
-    return NextResponse.json(usuarios);
-  }
 
-  // Outros níveis não têm acesso
-  return NextResponse.json({ error: "Permissão negada" }, { status: 403 });
+    return NextResponse.json({ usuario }, { status: 201 });
+  } catch (error: any) {
+    if (error.code === "P2002") {
+      return NextResponse.json({ error: "Já existe um utilizador com esse email." }, { status: 409 });
+    }
+    return NextResponse.json({ error: "Erro ao criar utilizador." }, { status: 500 });
+  }
 }
 
-export async function POST(req: NextRequest) {
+export async function PATCH(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!session?.user?.tenantId) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+  const criadorNivel = session.user.nivel as any;
 
-  const nivel = session.user.nivel;
-  const tenantId = session.user.tenantId;
+  try {
+    const body = await request.json();
+    const { id, nivel, permissoesExtras } = body;
 
-  if (!["SUPER_ADMIN", "ADMIN"].includes(nivel)) {
-    return NextResponse.json({ error: "Permissão negada" }, { status: 403 });
+    // Se o nível for alterado, validar
+    if (nivel) {
+      if (!podeAtribuirNivel(criadorNivel, nivel)) {
+        return NextResponse.json({ error: "Não tens permissão para atribuir esse nível." }, { status: 403 });
+      }
+    }
+
+    const extrasValidos = recursosExtrasDisponiveis(nivel);
+    const extrasFiltrados = (permissoesExtras || []).filter((r: string) => extrasValidos.includes(r as Recurso));
+
+    const usuario = await prisma.usuario.update({
+      where: { id, tenantId: session.user.tenantId },
+      data: {
+        nivel,
+        permissoesExtras: extrasFiltrados,
+      },
+    });
+
+    return NextResponse.json({ usuario });
+  } catch (error: any) {
+    return NextResponse.json({ error: "Erro ao atualizar utilizador." }, { status: 500 });
+  }
+}
+
+export async function GET(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.tenantId) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const { nome, email, senha, nivel: nivelAlvo } = await req.json();
-  if (!nome || !email || !senha) {
-    return NextResponse.json({ error: "Campos obrigatórios" }, { status: 400 });
-  }
-
-  // ADMIN força o seu tenantId
-  const targetTenantId = tenantId;
-
-  const existente = await prisma.usuario.findFirst({ where: { email } });
-  if (existente) return NextResponse.json({ error: "Email já registado" }, { status: 400 });
-
-  const hash = await bcrypt.hash(senha, 10);
-  const usuario = await prisma.usuario.create({
-    data: {
-      nome,
-      email,
-      senha: hash,
-      nivel: nivelAlvo || "GERENTE",
-      tenantId: targetTenantId,
+  const usuarios = await prisma.usuario.findMany({
+    where: { tenantId: session.user.tenantId },
+    select: {
+      id: true,
+      nome: true,
+      email: true,
+      nivel: true,
       ativo: true,
+      createdAt: true,
+      permissoesExtras: true,
+      avatar: true,
     },
-    select: { id: true, nome: true, email: true, nivel: true, ativo: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(usuario, { status: 201 });
+  return NextResponse.json(usuarios);
 }
