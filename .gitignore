@@ -25,3 +25,4 @@ uploads/
 /create-super-admin.js
 /fix-admin.js
 /down.sql
+.next-old/
