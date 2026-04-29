@@ -38,8 +38,10 @@ export interface ChatResposta {
 }
 
 // ================= FUNÇÕES DE MATCH =================
+/** Limpa o texto: normaliza, remove asteriscos e outros caracteres, e PT-BR/PT-PT */
 function limpar(texto: string): string {
   return normalizeQuestion(texto)
+    .replace(/\*\*/g, "")        // remove asteriscos de markdown
     .replace(/vc\b/g, "voce")
     .replace(/tá\b/g, "esta")
     .replace(/tô\b/g, "estou")
@@ -65,7 +67,11 @@ function matchFlexivel(input: string, chaves: string[]): boolean {
     const limpa = limpar(chave);
     const comum = palavrasEmComum(input, limpa);
     const totalChave = limpa.split(" ").filter(p => p.length > 1).length;
-    if (comum >= 2 || (totalChave <= 2 && comum === totalChave)) return true;
+    // se tem 2+ palavras em comum, ou se a chave tem 1-2 palavras e todas batem
+    // Mas para evitar que "ponto" dispare "ponto venda", exigimos que se a chave tiver mais de 1 palavra,
+    // todas as palavras devem estar presentes.
+    if (totalChave === 1 && comum === 1) return true;
+    if (totalChave > 1 && comum === totalChave) return true;
   }
   return false;
 }
@@ -347,7 +353,7 @@ const respostas: RespostaDireta[] = [
   },
   {
     chaves: ["configuracao", "configurações", "painel admin", "ajustes", "definições", "gestao", "admin"],
-    resposta: "⚠️ As configurações do sistema (WhatsApp, faturação, segurança, etc.) são acessíveis apenas a SUPER_ADMIN.\n\nSe precisas de alterar algo, consulta o **super administrador da Autotrack** da tua oficina."
+    resposta: "⚠️ As configurações do sistema (WhatsApp, faturação, segurança, etc.) são acessíveis apenas a Autotrack.\n\nSe precisas de alterar algo, consulta o **super administrador da Autotrack** da tua oficina."
   },
   {
     chaves: ["obrigado", "obrigada", "valeu", "brigado", "mt obrigado", "agradeco", "grato"],
@@ -370,8 +376,8 @@ const respostas: RespostaDireta[] = [
     resposta: "📱 O AutoTrack funciona em qualquer navegador no telemóvel! Basta aceder a **sistema.autotrack.pt** no teu telemóvel e fazer login.\n\nNão precisas instalar nada — é 100% web e responsivo."
   },
   {
-    chaves: ["gps", "localizacao", "localização", "rastreamento", "tracker", "traccar"],
-    resposta: "📍 O módulo de GPS (via Autotrack) permite rastrear veículos em tempo real.\n\nPara ativar:\n1. Menu **Configurações > GPS** (SUPER_ADMIN)\n2. Insere os dados do servidor Autotrack\n3. Associa veículos aos dispositivos\n\nPrecisas de ajuda mais detalhada?"
+    chaves: ["gps", "localizacao", "localização", "rastreamento", "tracker"],
+    resposta: "📍 O módulo de GPS (via servidor de rastreamento) permite rastrear veículos em tempo real.\n\nPara ativar:\n1. Menu **Configurações > GPS** (SUPER_ADMIN)\n2. Insere os dados do servidor\n3. Associa veículos aos dispositivos\n\nPrecisas de ajuda mais detalhada?"
   },
 ];
 
@@ -391,6 +397,7 @@ export function chatbotResposta(pergunta: string, contexto?: ChatContexto, nomeU
   const norm = limpar(pergunta);
   if (!norm) return { resposta: "Diz-me o que precisas! 😊", precisaIA: false };
 
+  // Trata "próximo" / "sim" se houver aula anterior
   if (contexto?.ultimaAulaId) {
     const aulaAtual = aulas[contexto.ultimaAulaId];
     if (aulaAtual?.proxima) {
@@ -409,18 +416,20 @@ export function chatbotResposta(pergunta: string, contexto?: ChatContexto, nomeU
     }
   }
 
+  // Procura nas respostas diretas por correspondência de palavras-chave
   for (const item of respostas) {
-    const match = matchFlexivel(norm, item.chaves);
-    if (!match) continue;
-    if (item.modoAula && aulas[item.modoAula]) {
-      const aula = aulas[item.modoAula];
-      return {
-        resposta: formatarAula(aula),
-        precisaIA: false,
-        proximoContexto: { ultimaAulaId: item.modoAula }
-      };
-    }
+    const match = item.chaves.some(chave => matchFlexivel(norm, [chave]));
+    if (match) {
+      if (item.modoAula && aulas[item.modoAula]) {
+        const aula = aulas[item.modoAula];
+        return {
+          resposta: formatarAula(aula),
+          precisaIA: false,
+          proximoContexto: { ultimaAulaId: item.modoAula }
+        };
+      }
       if (item.resposta) {
+        // Personalizar saudação com nome
         if (item.chaves[0] === "ola" && nomeUtilizador) {
           return {
             resposta: `Olá, **${nomeUtilizador}**! 😊\n\nSou o assistente do AutoTrack e estou aqui para te ajudar.\n\nPodes perguntar-me como criar uma OS, usar o caixa, bater o ponto, entre outros.`,
@@ -429,8 +438,10 @@ export function chatbotResposta(pergunta: string, contexto?: ChatContexto, nomeU
         }
         return { resposta: item.resposta, precisaIA: false };
       }
+    }
   }
 
+  // Verifica tags das aulas
   for (const aula of Object.values(aulas)) {
     if (matchFlexivel(norm, aula.tags)) {
       return {

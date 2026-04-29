@@ -125,6 +125,16 @@ export default function UsuariosPage() {
     }
   };
 
+  const revogarSessoes = async (id: string) => {
+    if (!confirm("Tem a certeza que deseja revogar as sessões deste utilizador?")) return;
+    const res = await fetch(`/api/usuarios/${id}/sessoes`, { method: "DELETE" });
+    if (res.ok) alert("Sessões revogadas.");
+    else {
+      const err = await res.json();
+      alert(err.error || "Erro ao revogar sessões");
+    }
+  };
+
   const nivelColor = (nivel: string) => {
     switch (nivel) {
       case "SUPER_ADMIN": return "bg-red-600 text-white";
@@ -260,6 +270,7 @@ export default function UsuariosPage() {
             <DialogTitle>Editar {editUser?.nome}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <Button variant="destructive" size="sm" onClick={() => revogarSessoes(editUser.id)}>Revogar sessões</Button>
             <div>
               <Label>Nível</Label>
               <Select value={editForm.nivel} onValueChange={v => setEditForm(prev => ({ ...prev, nivel: v }))}>
@@ -285,15 +296,7 @@ export default function UsuariosPage() {
                 ))}
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={handleEditSave} className="flex-1">Guardar alterações</Button>
-              <Button
-                variant="destructive"
-                onClick={() => { setEditDialogOpen(false); handleDelete(editUser.id, editUser.nome); }}
-              >
-                Apagar este utilizador
-              </Button>
-            </div>
+            <Button onClick={handleEditSave} className="w-full">Guardar alterações</Button>
           </div>
         </DialogContent>
       </Dialog>

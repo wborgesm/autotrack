@@ -318,6 +318,7 @@ model Peca {
   movimentos  MovimentoEstoque[]
   itensPeca   ItemPecaOrdem[]
   orcamentoItens OrcamentoItem[]
+  movimentosStock   MovimentoStock[]
   reservas        ReservaPeca[]
   encomendaItens EncomendaItem[]
 
@@ -801,4 +802,17 @@ model ChatCache {
   pergunta  String   @unique
   resposta  String
   createdAt DateTime @default(now())
+}
+
+
+model MovimentoStock {
+  id          String   @id @default(cuid())
+  pecaId      String
+  peca        Peca     @relation(fields: [pecaId], references: [id], onDelete: Cascade)
+  tipo        String
+  quantidade  Int
+  origem      String?
+  usuarioId   String?
+  usuarioNome String?
+  createdAt   DateTime @default(now())
 }

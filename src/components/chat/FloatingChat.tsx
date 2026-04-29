@@ -1,6 +1,5 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { MessageCircle, X, Send, Loader2, Bot, User, Brain, ThumbsUp, ThumbsDown, FlaskConical, ChevronRight, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,11 +27,6 @@ const processando = [
 ];
 
 export default function FloatingChat() {
-
-function processarMarkdown(texto: string): string {
-  return texto.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-}
-  const sessionData = useSession();
   const [aberto, setAberto] = useState(false);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [input, setInput] = useState("");
@@ -117,7 +111,7 @@ function processarMarkdown(texto: string): string {
         }]);
         setFalhasSeguidas(0);
       } else {
-        const resultado = chatbotResposta(pergunta, contexto, sessionData?.data?.user?.name || undefined);
+        const resultado = chatbotResposta(pergunta, contexto);
         setMensagens(prev => [...prev, {
           tipo: "bot",
           texto: resultado.resposta,
@@ -208,7 +202,6 @@ function processarMarkdown(texto: string): string {
           )}
         </div>
         
-        {/* Sugestões */}
         {isBot && msg.sugestoes && msg.sugestoes.length > 0 && (
           <div className="flex flex-wrap gap-1.5 ml-10 mt-1">
             {msg.sugestoes.map((sugestao, i) => (
@@ -219,7 +212,6 @@ function processarMarkdown(texto: string): string {
           </div>
         )}
 
-        {/* Pesquisa web */}
         {msg.pesquisando && (
           <div className="flex items-center gap-2 text-xs text-gray-400 ml-10 mt-1">
             <span className="animate-spin">⏳</span> A pesquisar na internet...
@@ -231,7 +223,6 @@ function processarMarkdown(texto: string): string {
           </button>
         )}
 
-        {/* Avaliação */}
         {isBot && !msg.avaliada && idx > 0 && (
           <div className="flex items-center gap-2 ml-10 mt-1">
             <button onClick={() => avaliar(idx, true)} className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="Útil"><ThumbsUp className="h-3.5 w-3.5" /></button>
@@ -275,6 +266,10 @@ function processarMarkdown(texto: string): string {
               <Input value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Pergunta algo..." className="flex-1 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-sm rounded-full" />
               <Button size="sm" onClick={() => enviar()} disabled={loading || !input.trim()} className="bg-blue-600 rounded-full"><Send className="h-4 w-4" /></Button>
             </div>
+            {/* Mensagem de versão beta */}
+            <p className="text-[10px] text-center text-gray-400 dark:text-gray-500">
+              ⚡ Chat em versão <strong>Beta</strong> — pode cometer erros.
+            </p>
           </div>
         </div>
       )}

@@ -1,95 +1,115 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useMemo } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import { formatNIF, formatPhone } from "@/lib/utils";
+import { AvatarIniciais } from "@/components/ui/AvatarIniciais";
+import { useDebounce } from "@/hooks/useDebounce";
+import { LayoutGrid, LayoutList, Download } from "lucide-react";
 
 export default function ClientesPage() {
-  const { data: session } = useSession();
   const [clientes, setClientes] = useState<any[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ nome: "", cpf: "", telefone: "", email: "", endereco: "", observacoes: "" });
-  const [editId, setEditId] = useState<string | null>(null);
+  const [vista, setVista] = useState<"cards" | "tabela">("tabela");
+  const [pesquisa, setPesquisa] = useState("");
+  const debouncedPesquisa = useDebounce(pesquisa, 300);
 
-  const fetchClientes = async () => {
-    const res = await fetch("/api/clientes");
-    const data = await res.json();
-    setClientes(data.data || []);
+  useEffect(() => {
+    fetch("/api/clientes")
+      .then(r => r.json())
+      .then(d => {
+        // Aceitar array direto ou objeto com .clientes
+        const lista = Array.isArray(d) ? d : Array.isArray(d.clientes) ? d.clientes : [];
+        setClientes(lista);
+      })
+      .catch(() => setClientes([]));
+    const saved = localStorage.getItem("clientes_vista");
+    if (saved === "cards") setVista("cards");
+  }, []);
+
+  const toggleVista = () => {
+    const nova = vista === "tabela" ? "cards" : "tabela";
+    setVista(nova);
+    localStorage.setItem("clientes_vista", nova);
   };
 
-  useEffect(() => { if (session) fetchClientes(); }, [session]);
+  const filtrados = useMemo(() => {
+    if (!debouncedPesquisa) return clientes;
+    const q = debouncedPesquisa.toLowerCase();
+    return clientes.filter((c: any) =>
+      c.nome?.toLowerCase().includes(q) ||
+      c.cpf?.includes(q) ||
+      c.email?.toLowerCase().includes(q) ||
+      c.telefone?.includes(q)
+    );
+  }, [clientes, debouncedPesquisa]);
 
-  const handleSubmit = async () => {
-    const url = editId ? `/api/clientes/${editId}` : "/api/clientes";
-    const method = editId ? "PATCH" : "POST";
-    await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-    setDialogOpen(false); setEditId(null);
-    setForm({ nome: "", cpf: "", telefone: "", email: "", endereco: "", observacoes: "" });
-    fetchClientes();
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Desativar cliente?")) return;
-    await fetch(`/api/clientes/${id}`, { method: "DELETE" });
-    fetchClientes();
+  const exportarCSV = () => {
+    const cabecalho = "Nome,NIF,Telefone,Email,Morada,Data Registo";
+    const linhas = clientes.map((c: any) =>
+      `"${c.nome || ""}","${c.cpf || ""}","${c.telefone || ""}","${c.email || ""}","${c.endereco || ""}","${new Date(c.createdAt).toLocaleDateString("pt-PT")}"`
+    );
+    const blob = new Blob([cabecalho + "\n" + linhas.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "clientes.csv"; a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Clientes</h1>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4"/>Novo Cliente</Button></DialogTrigger>
-          <DialogContent aria-describedby="cliente-form-desc">
-            <DialogHeader><DialogTitle>{editId ? "Editar" : "Novo"} Cliente</DialogTitle></DialogHeader>
-            <p id="cliente-form-desc" className="text-sm text-gray-500 hidden">Formulário de cliente.</p>
-            <div className="grid gap-4">
-              <div><Label>Nome</Label><Input value={form.nome} onChange={e=>setForm({...form, nome:e.target.value})}/></div>
-              <div><Label>NIF</Label><Input value={form.cpf} onChange={e=>setForm({...form, cpf:e.target.value})}/></div>
-              <div><Label>Telefone</Label><Input value={form.telefone} onChange={e=>setForm({...form, telefone:e.target.value})}/></div>
-              <div><Label>Email</Label><Input value={form.email} onChange={e=>setForm({...form, email:e.target.value})}/></div>
-              <div><Label>Morada</Label><Input value={form.endereco} onChange={e=>setForm({...form, endereco:e.target.value})}/></div>
-              <div><Label>Observações</Label><Input value={form.observacoes} onChange={e=>setForm({...form, observacoes:e.target.value})}/></div>
-              <Button onClick={handleSubmit}>Guardar</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={toggleVista}>
+            {vista === "tabela" ? <LayoutGrid className="h-4 w-4" /> : <LayoutList className="h-4 w-4" />}
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportarCSV}><Download className="h-4 w-4 mr-1" /> CSV</Button>
+        </div>
       </div>
-      <Card><CardHeader><CardTitle>Lista de Clientes</CardTitle></CardHeader>
-      <CardContent>
-        <Table><TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>NIF</TableHead><TableHead>Telefone</TableHead><TableHead>Email</TableHead><TableHead>Ações</TableHead></TableRow></TableHeader>
-        <TableBody>
-          {clientes.map(c => (
-            <TableRow key={c.id}>
-              <TableCell>{c.nome}</TableCell>
-              <TableCell>{formatNIF(c.cpf)}</TableCell>
-              <TableCell>{formatPhone(c.telefone)}</TableCell>
-              <TableCell>{c.email}</TableCell>
-              <TableCell>
-                <Button size="sm" variant="outline" onClick={() => {
-                  setEditId(c.id);
-                  setForm({
-                    nome: c.nome,
-                    cpf: c.cpf || "",
-                    telefone: c.telefone || "",
-                    email: c.email || "",
-                    endereco: c.endereco || "",
-                    observacoes: c.observacoes || ""
-                  });
-                  setDialogOpen(true);
-                }}><Pencil className="h-4 w-4"/></Button>
-                <Button size="sm" variant="destructive" className="ml-2" onClick={() => handleDelete(c.id)}><Trash2 className="h-4 w-4"/></Button>
-              </TableCell>
-            </TableRow>
+      <Input placeholder="Pesquisar clientes..." value={pesquisa} onChange={e => setPesquisa(e.target.value)} />
+      {vista === "tabela" ? (
+        <Card className="glass">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>NIF</TableHead>
+                <TableHead>Telefone</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>OS</TableHead>
+                <TableHead>Veículos</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtrados.map((c: any) => (
+                <TableRow key={c.id}>
+                  <TableCell className="font-medium">{c.nome}</TableCell>
+                  <TableCell>{c.cpf || "-"}</TableCell>
+                  <TableCell>{c.telefone || "-"}</TableCell>
+                  <TableCell>{c.email || "-"}</TableCell>
+                  <TableCell>{c._count?.ordens || 0}</TableCell>
+                  <TableCell>{c._count?.veiculos || 0}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filtrados.map((c: any) => (
+            <Card key={c.id} className="glass p-4 flex items-center gap-4">
+              <AvatarIniciais nome={c.nome} tamanho="lg" />
+              <div>
+                <p className="font-semibold">{c.nome}</p>
+                <p className="text-sm text-gray-500">{c.cpf || "Sem NIF"}</p>
+                <p className="text-sm text-gray-500">{c.telefone || "Sem telefone"}</p>
+                <p className="text-xs mt-1">{c._count?.ordens || 0} OS · {c._count?.veiculos || 0} veículos</p>
+              </div>
+            </Card>
           ))}
-        </TableBody></Table>
-      </CardContent></Card>
+        </div>
+      )}
     </div>
   );
 }
