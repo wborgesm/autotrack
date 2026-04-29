@@ -161,7 +161,7 @@ model Usuario {
   ativo       Boolean     @default(true)
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
-  permissoesExtras String[]
+  permissoes  String[]
   avatar      String?
 
   agendamentos Agendamento[]

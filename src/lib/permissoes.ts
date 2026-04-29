@@ -22,7 +22,6 @@ export const TODOS_RECURSOS: Recurso[] = [
   "configuracoes", "auditoria", "addons"
 ];
 
-// Níveis disponíveis para cada nível (pode criar estes níveis)
 export const NIVEIS_CRIAVEIS: Record<NivelAcesso, NivelAcesso[]> = {
   SUPER_ADMIN: ["ADMIN", "GERENTE", "TECNICO", "RECEPCIONISTA", "CLIENTE"],
   ADMIN:      ["GERENTE", "TECNICO", "RECEPCIONISTA", "CLIENTE"],
@@ -32,8 +31,7 @@ export const NIVEIS_CRIAVEIS: Record<NivelAcesso, NivelAcesso[]> = {
   CLIENTE:    [],
 };
 
-// Permissões base por nível
-const PERMISSOES_BASE: Record<NivelAcesso, Recurso[]> = {
+export const PERMISSOES_BASE: Record<NivelAcesso, Recurso[]> = {
   SUPER_ADMIN: TODOS_RECURSOS,
   ADMIN: [
     "dashboard", "agenda", "orcamentos", "ordens", "clientes", "veiculos",
@@ -53,36 +51,31 @@ const PERMISSOES_BASE: Record<NivelAcesso, Recurso[]> = {
   CLIENTE: []
 };
 
-/** Verifica se o utilizador tem acesso a um recurso (base + extras) */
+/** Verifica se o utilizador tem acesso a um recurso, usando a lista personalizada ou, se vazia, o nível base. */
 export function temPermissao(
   nivel: NivelAcesso,
   recurso: Recurso,
-  permissoesExtras: string[] = []
+  permissoes?: string[]
 ): boolean {
-  const base = PERMISSOES_BASE[nivel] ?? [];
-  if (base.includes(recurso)) return true;
-  return permissoesExtras.includes(recurso);
+  if (permissoes && permissoes.length > 0) {
+    return permissoes.includes(recurso);
+  }
+  return (PERMISSOES_BASE[nivel] ?? []).includes(recurso);
 }
 
-/** Valida se um nível pode ser atribuído por outro */
 export function podeAtribuirNivel(criador: NivelAcesso, alvo: NivelAcesso): boolean {
   return (NIVEIS_CRIAVEIS[criador] ?? []).includes(alvo);
 }
 
-/** Retorna a lista de recursos que podem ser adicionados a um nível base */
 export function recursosExtrasDisponiveis(nivel: NivelAcesso): Recurso[] {
   const base = PERMISSOES_BASE[nivel] ?? [];
   return TODOS_RECURSOS.filter(r => !base.includes(r));
 }
 
-// Funções mantidas para compatibilidade com as APIs existentes
-
-/** Versão simplificada para uso nas APIs (sem permissões extras) */
-export function checkApiPermissao(nivel: string, recurso: Recurso, permissoesExtras?: string[]): boolean {
-  return temPermissao(nivel as NivelAcesso, recurso, permissoesExtras ?? []);
+export function checkApiPermissao(nivel: string, recurso: Recurso, permissoes?: string[]): boolean {
+  return temPermissao(nivel as NivelAcesso, recurso, permissoes);
 }
 
-/** Regra de acesso a ordens de serviço */
 export function podeGerenciarOrdem(
   usuarioNivel: NivelAcesso,
   usuarioId: string,
