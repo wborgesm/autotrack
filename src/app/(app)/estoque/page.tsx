@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, AlertCircle, CheckCircle, Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+  <dialog id="nova-peca-dialog" className="p-6 rounded-xl glass"><h2 className="text-lg font-bold mb-4">Nova Peça / Editar</h2><div className="grid grid-cols-2 gap-4"><Input placeholder="Nome" /><Input placeholder="Categoria" /><Input type="number" placeholder="Quantidade" /><Input type="number" placeholder="Preço" /></div><Button className="mt-4" onClick={() => alert("Funcionalidade em desenvolvimento")}>Guardar</Button></dialog>
 export default function EstoquePage() {
   const [pecas, setPecas] = useState<any[]>([]);
   const [filtro, setFiltro] = useState("todos");
@@ -23,6 +24,8 @@ export default function EstoquePage() {
     return true;
   });
 
+  const [edicao, setEdicao] = useState<any>(null);
+  const editarPeca = (p: any) => setEdicao({ ...p });
   const ajustarQuantidade = async (id: string, delta: number) => {
     const original = pecas;
     setPecas(prev => prev.map(p => p.id === id ? { ...p, qtdEstoque: Math.max(0, p.qtdEstoque + delta) } : p));
@@ -36,6 +39,7 @@ export default function EstoquePage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Stock</h1>
+<Button variant="outline" size="sm" onClick={() => document.getElementById("nova-peca-dialog")?.showModal()}><Plus className="h-4 w-4 mr-1" /> Nova Peça</Button>
       <div className="flex gap-2">
         {["todos", "ok", "baixo", "zero"].map(tab => (
           <Button key={tab} variant={filtro === tab ? "default" : "outline"} size="sm" onClick={() => setFiltro(tab)}>
@@ -66,6 +70,7 @@ export default function EstoquePage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
+<Button size="sm" variant="ghost" onClick={() => editarPeca(p)}><Edit className="h-4 w-4" /></Button>
                       <Button size="sm" variant="outline" disabled={p.qtdEstoque <= 0} onClick={() => ajustarQuantidade(p.id, -1)}><Minus className="h-3 w-3" /></Button>
                       <Button size="sm" variant="outline" onClick={() => ajustarQuantidade(p.id, 1)}><Plus className="h-3 w-3" /></Button>
                     </div>

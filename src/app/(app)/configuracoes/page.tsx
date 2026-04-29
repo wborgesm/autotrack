@@ -146,9 +146,9 @@ export default function ConfiguracoesPage() {
         </TabsContent>
         <TabsContent value="whatsapp"><Card className="glass"><CardContent className="p-6"><WhatsAppSection /></CardContent></Card></TabsContent>
         <TabsContent value="faturacao"><Card className="glass"><CardContent className="p-6"><p className="text-gray-500">Configuração de faturação via Moloni.</p></CardContent></Card></TabsContent>
-        <TabsContent value="notificacoes"><Card className="glass"><CardContent className="p-6"><p className="text-gray-500">Gerir notificações.</p></CardContent></Card></TabsContent>
-        <TabsContent value="seguranca"><Card className="glass"><CardContent className="p-6"><p className="text-gray-500">Alterar password, 2FA.</p></CardContent></Card></TabsContent>
-        <TabsContent value="addons"><Card className="glass"><CardContent className="p-6"><p className="text-gray-500">Módulos adicionais.</p></CardContent></Card></TabsContent>
+<TabsContent value="notificacoes"><Card className="glass"><CardContent className="p-6"><h3 className="font-semibold mb-3">Canais de Notificação</h3><div className="space-y-3">{["OS Pronta", "OS Entregue", "Stock Crítico", "Nova Encomenda"].map(e => (<div key={e} className="flex items-center justify-between"><span>{e}</span><div className="flex gap-2"><Checkbox /> WhatsApp <Checkbox /> SMS <Checkbox /> Email</div></div>))}</div><Button size="sm" className="mt-4">Guardar</Button></CardContent></Card></TabsContent>
+<TabsContent value="seguranca"><Card className="glass"><CardContent className="p-6 space-y-4"><h3 className="font-semibold">Alterar Palavra-passe</h3><Input type="password" placeholder="Password atual" /><Input type="password" placeholder="Nova password" /><Input type="password" placeholder="Confirmar nova password" /><Button size="sm">Alterar</Button><hr /><h3 className="font-semibold">Autenticação de Dois Fatores (2FA)</h3><Button variant="outline" size="sm">Configurar 2FA</Button></CardContent></Card></TabsContent>
+<TabsContent value="addons"><Card className="glass"><CardContent className="p-6 space-y-3"><h3 className="font-semibold">Módulos Adicionais</h3>{["GPS (Traccar)", "Portal do Cliente", "Pontos de Fidelidade"].map(m => (<div key={m} className="flex items-center justify-between"><span>{m}</span><Switch /></div>))}<Button size="sm" className="mt-4">Guardar</Button></CardContent></Card></TabsContent>
       </Tabs>
     </div>
   );
