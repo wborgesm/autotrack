@@ -26,3 +26,6 @@ uploads/
 /fix-admin.js
 /down.sql
 .next-old/
+.next-tmp/
+.next-tmp/
+.next-old/

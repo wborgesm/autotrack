@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 
 function WhatsAppSection() {
   const [status, setStatus] = useState("DISCONNECTED");
@@ -27,7 +26,6 @@ function WhatsAppSection() {
 }
 
 export default function ConfiguracoesPage() {
-  const { data: session } = useSession();
   const [oficina, setOficina] = useState({
     nome: "", telefone: "", email: "", endereco: "", logo: "",
     latitude: "", longitude: "", raioPermitido: "", tipoOficina: "",
@@ -38,31 +36,11 @@ export default function ConfiguracoesPage() {
     fetch("/api/configuracoes")
       .then(r => r.json())
       .then(d => {
-        if (d.oficina) {
-          setOficina(prev => ({
-            ...prev,
-            nome: d.oficina.nome || "",
-            telefone: d.oficina.telefone || "",
-            email: d.oficina.email || "",
-            endereco: d.oficina.endereco || "",
-            logo: d.oficina.logo || "",
-            latitude: d.oficina.latitude || "",
-            longitude: d.oficina.longitude || "",
-            raioPermitido: d.oficina.raioPermitido?.toString() || "",
-            tipoOficina: d.oficina.tipoOficina || "",
-            moloniDevId: d.oficina.moloniDevId || "",
-            moloniSecret: d.oficina.moloniSecret || "",
-            moloniEmail: d.oficina.moloniEmail || "",
-            moloniPass: d.oficina.moloniPass || "",
-            moloniCompanyId: d.oficina.moloniCompanyId || "",
-          }));
-        }
+        if (d.oficina) setOficina(prev => ({ ...prev, ...d.oficina }));
       });
   }, []);
 
-  const handleChange = (campo: string, valor: string) => {
-    setOficina(prev => ({ ...prev, [campo]: valor }));
-  };
+  const handleChange = (campo: string, valor: string) => setOficina(prev => ({ ...prev, [campo]: valor }));
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -71,33 +49,14 @@ export default function ConfiguracoesPage() {
     formData.append("file", file);
     const res = await fetch("/api/upload", { method: "POST", body: formData });
     const data = await res.json();
-    if (data.url) {
-      setOficina(prev => ({ ...prev, logo: data.url }));
-    }
+    if (data.url) setOficina(prev => ({ ...prev, logo: data.url }));
   };
 
   const guardar = () => {
     fetch("/api/configuracoes", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        oficina: {
-          nome: oficina.nome,
-          telefone: oficina.telefone,
-          email: oficina.email,
-          endereco: oficina.endereco,
-          logo: oficina.logo,
-          latitude: oficina.latitude,
-          longitude: oficina.longitude,
-          raioPermitido: oficina.raioPermitido,
-          tipoOficina: oficina.tipoOficina,
-          moloniDevId: oficina.moloniDevId,
-          moloniSecret: oficina.moloniSecret,
-          moloniEmail: oficina.moloniEmail,
-          moloniPass: oficina.moloniPass,
-          moloniCompanyId: oficina.moloniCompanyId,
-        },
-      }),
+      body: JSON.stringify({ oficina }),
     }).then(() => alert("Configurações guardadas."));
   };
 
@@ -113,17 +72,18 @@ export default function ConfiguracoesPage() {
           <TabsTrigger value="seguranca">Segurança</TabsTrigger>
           <TabsTrigger value="addons">Addons</TabsTrigger>
         </TabsList>
+
         <TabsContent value="geral">
           <Card className="glass">
             <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <Input placeholder="Nome da oficina" value={oficina.nome} onChange={e => handleChange("nome", e.target.value)} />
-                <Input placeholder="NIF" value={oficina.email} onChange={e => handleChange("email", e.target.value)} />
+                <Input placeholder="Email" value={oficina.email} onChange={e => handleChange("email", e.target.value)} />
                 <Input placeholder="Morada" value={oficina.endereco} onChange={e => handleChange("endereco", e.target.value)} />
                 <Input placeholder="Telefone" value={oficina.telefone} onChange={e => handleChange("telefone", e.target.value)} />
                 <Input placeholder="Latitude" value={oficina.latitude} onChange={e => handleChange("latitude", e.target.value)} />
                 <Input placeholder="Longitude" value={oficina.longitude} onChange={e => handleChange("longitude", e.target.value)} />
-                <Input placeholder="Raio Permitido (m)" type="number" value={oficina.raioPermitido} onChange={e => handleChange("raioPermitido", e.target.value)} />
+                <Input placeholder="Raio Permitido (m)" value={oficina.raioPermitido} onChange={e => handleChange("raioPermitido", e.target.value)} />
                 <Input placeholder="Tipo de Oficina" value={oficina.tipoOficina} onChange={e => handleChange("tipoOficina", e.target.value)} />
                 <Input placeholder="Moloni Dev ID" value={oficina.moloniDevId} onChange={e => handleChange("moloniDevId", e.target.value)} />
                 <Input placeholder="Moloni Secret" value={oficina.moloniSecret} onChange={e => handleChange("moloniSecret", e.target.value)} />
@@ -136,19 +96,58 @@ export default function ConfiguracoesPage() {
                   <label className="block text-sm font-medium mb-1">Logo da Oficina</label>
                   <Input type="file" accept="image/*" onChange={handleLogoUpload} />
                 </div>
-                {oficina.logo && (
-                  <img src={oficina.logo} alt="Logo" className="h-12 rounded" />
-                )}
+                {oficina.logo && <img src={oficina.logo} alt="Logo" className="h-12 rounded" />}
               </div>
               <Button onClick={guardar}>Guardar</Button>
             </CardContent>
           </Card>
         </TabsContent>
+
         <TabsContent value="whatsapp"><Card className="glass"><CardContent className="p-6"><WhatsAppSection /></CardContent></Card></TabsContent>
         <TabsContent value="faturacao"><Card className="glass"><CardContent className="p-6"><p className="text-gray-500">Configuração de faturação via Moloni.</p></CardContent></Card></TabsContent>
-<TabsContent value="notificacoes"><Card className="glass"><CardContent className="p-6"><h3 className="font-semibold mb-3">Canais de Notificação</h3><div className="space-y-3">{["OS Pronta", "OS Entregue", "Stock Crítico", "Nova Encomenda"].map(e => (<div key={e} className="flex items-center justify-between"><span>{e}</span><div className="flex gap-2"><Checkbox /> WhatsApp <Checkbox /> SMS <Checkbox /> Email</div></div>))}</div><Button size="sm" className="mt-4">Guardar</Button></CardContent></Card></TabsContent>
-<TabsContent value="seguranca"><Card className="glass"><CardContent className="p-6 space-y-4"><h3 className="font-semibold">Alterar Palavra-passe</h3><Input type="password" placeholder="Password atual" /><Input type="password" placeholder="Nova password" /><Input type="password" placeholder="Confirmar nova password" /><Button size="sm">Alterar</Button><hr /><h3 className="font-semibold">Autenticação de Dois Fatores (2FA)</h3><Button variant="outline" size="sm">Configurar 2FA</Button></CardContent></Card></TabsContent>
-<TabsContent value="addons"><Card className="glass"><CardContent className="p-6 space-y-3"><h3 className="font-semibold">Módulos Adicionais</h3>{["GPS (Traccar)", "Portal do Cliente", "Pontos de Fidelidade"].map(m => (<div key={m} className="flex items-center justify-between"><span>{m}</span><Switch /></div>))}<Button size="sm" className="mt-4">Guardar</Button></CardContent></Card></TabsContent>
+
+        <TabsContent value="notificacoes">
+          <Card className="glass"><CardContent className="p-6 space-y-3">
+            <h3 className="font-semibold">Notificações</h3>
+            {["OS Pronta", "OS Entregue", "Stock Crítico"].map(e => (
+              <div key={e} className="flex items-center justify-between">
+                <span>{e}</span>
+                <div className="flex gap-3">
+                  <label className="flex items-center gap-1 text-sm"><input type="checkbox" /> WhatsApp</label>
+                  <label className="flex items-center gap-1 text-sm"><input type="checkbox" /> SMS</label>
+                  <label className="flex items-center gap-1 text-sm"><input type="checkbox" /> Email</label>
+                </div>
+              </div>
+            ))}
+            <Button size="sm">Guardar</Button>
+          </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="seguranca">
+          <Card className="glass"><CardContent className="p-6 space-y-3">
+            <h3 className="font-semibold">Alterar Password</h3>
+            <Input type="password" placeholder="Password atual" />
+            <Input type="password" placeholder="Nova password" />
+            <Input type="password" placeholder="Confirmar nova password" />
+            <Button size="sm">Alterar</Button>
+          </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="addons">
+          <Card className="glass"><CardContent className="p-6 space-y-3">
+            <h3 className="font-semibold">Módulos Adicionais</h3>
+            {["GPS (Autotrack)", "Portal do Cliente", "Pontos de Fidelidade"].map(m => (
+              <div key={m} className="flex items-center justify-between">
+                <span>{m}</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" />
+                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+            ))}
+            <Button size="sm">Guardar</Button>
+          </CardContent></Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
