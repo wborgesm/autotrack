@@ -146,3 +146,11 @@ Sistema SaaS de gestão para oficinas mecânicas. Multi-tenant, cada empresa (of
 - Sistema restaurado a partir do backup local de 29 Abril 2026.
 - Todas as funcionalidades estão operacionais.
 - Schema do Prisma e páginas mantidos no estado funcional.
+
+---
+
+## 🔄 Restauro (30 Abril 2026)
+
+- Sistema restaurado a partir do backup local de 29 Abril 2026.
+- Todas as funcionalidades estão operacionais.
+- Schema do Prisma e páginas mantidos no estado funcional.
