@@ -138,3 +138,11 @@ Sistema SaaS de gestão para oficinas mecânicas. Multi-tenant, cada empresa (of
 - Cache de IA (ChatCache) para evitar chamadas repetidas ao Gemini.
 - Pesquisa web integrada (DuckDuckGo) apenas para temas do AutoTrack.
 - Build temporária movida para `/tmp` para evitar ficheiros grandes no Git.
+
+---
+
+## 🔄 Restauro (30 Abril 2026)
+
+- Sistema restaurado a partir do backup local de 29 Abril 2026.
+- Todas as funcionalidades estão operacionais.
+- Schema do Prisma e páginas mantidos no estado funcional.
