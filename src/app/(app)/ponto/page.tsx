@@ -1,4 +1,5 @@
 "use client";
+import ScannerPonto from "@/components/ponto/ScannerPonto";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { Play, Coffee, LogOut, Clock, MapPin, Navigation } from "lucide-react";
 export default function PontoPage() {
   const { data: session } = useSession();
   const [tecnicoId, setTecnicoId] = useState("");
-  const [referenciaId, setReferenciaId] = useState(""); // usuarioId ou tecnicoId
+  const [referenciaId, setReferenciaId] = useState("");
   const [referenciaTipo, setReferenciaTipo] = useState<"tecnico" | "usuario">("usuario");
   const [ordemId, setOrdemId] = useState("");
   const [ordens, setOrdens] = useState<any[]>([]);
@@ -22,8 +23,6 @@ export default function PontoPage() {
 
   useEffect(() => {
     if (!session) return;
-
-    // Tenta buscar o técnico associado ao utilizador
     fetch(`/api/tecnicos?usuarioId=${session.user.id}`)
       .then(r => r.ok ? r.json() : [])
       .then(d => {
@@ -34,7 +33,6 @@ export default function PontoPage() {
           setReferenciaTipo("tecnico");
           setMsg(`🔧 ${tecnico.nome} — pronto para registar`);
         } else {
-          // Usa o próprio ID de utilizador
           setReferenciaId(session.user.id);
           setReferenciaTipo("usuario");
           setMsg(`👤 ${session.user.name} — pronto para registar`);
@@ -85,6 +83,9 @@ export default function PontoPage() {
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold flex items-center gap-2"><Clock className="h-6 w-6 text-blue-600" /> Ponto Eletrónico</h1>
       <Card><CardContent className="flex items-center justify-between p-4"><div className="flex items-center gap-2"><MapPin className="h-5 w-5 text-blue-600" /><span className="text-sm">{geoStatus}</span></div><Button variant="outline" size="sm" onClick={obterLocalizacao}><Navigation className="h-4 w-4 mr-2" /> Obter Localização</Button></CardContent></Card>
+      
+      <ScannerPonto usuarioId={referenciaId || ""} />
+
       <Card><CardHeader><CardTitle>Registar Ponto</CardTitle></CardHeader><CardContent className="space-y-4">
         <div>
           <Label>Ordem de Serviço (opcional)</Label>

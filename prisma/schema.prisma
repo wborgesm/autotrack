@@ -166,6 +166,9 @@ model Usuario {
   permissoes  String[]
   avatar      String?
   sessoes    Sessao[]
+  faceDescriptor      Json?
+  registrosPonto RegistroPonto[]
+  fotoReferenciaPath  String?
 
   agendamentos Agendamento[]
   ordensServico OrdemServico[]
@@ -845,4 +848,17 @@ model Sessao {
   browser    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model RegistroPonto {
+  id            String   @id @default(cuid())
+  usuarioId     String
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id])
+  dataHora      DateTime @default(now())
+  latitude      Float
+  longitude     Float
+  fotoPath      String
+  distanciaFace Float?
+  autenticado   Boolean  @default(false)
+  createdAt     DateTime @default(now())
 }

@@ -183,7 +183,7 @@ export default function CaixaPage() {
             </Badge>
           )}
           {caixaAberto && (
-            <Button variant="outline" size="sm" onClick={fecharCaixa} className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+            <Button variant="outline" size="sm" onClick={() => window.location.href = "/caixa/fechar"} className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
               <XCircle className="h-4 w-4 mr-1" /> Fechar Caixa
             </Button>
           )}

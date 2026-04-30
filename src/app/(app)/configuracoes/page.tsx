@@ -1,163 +1,192 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Store, Smartphone, Star, MapPin, MessageCircle, Globe, Clock, Bell, Camera, Facebook, Instagram, Music, Receipt, Building } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+
+function WhatsAppSection() {
+  const [status, setStatus] = useState("DISCONNECTED");
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetch("/api/whatsapp/status").then(r => r.json()).then(d => {
+        setStatus(d.status); setQrCode(d.qrCodeBase64 || null);
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+  return (
+    <div className="space-y-4 text-center">
+      {status === "DISCONNECTED" && <p className="text-gray-500">Desconectado</p>}
+      {status === "QR_READY" && qrCode && <img src={qrCode} alt="QR Code" className="mx-auto" />}
+      {status === "CONNECTED" && <p className="text-green-600 font-semibold">Conectado</p>}
+    </div>
+  );
+}
 
 export default function ConfiguracoesPage() {
-  const { data: session, update } = useSession();
-  const [perfil, setPerfil] = useState({ nome: "", email: "", avatar: "" });
-  const [oficina, setOficina] = useState<any>({});
-  const [addons, setAddons] = useState<any>({});
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: session } = useSession();
+  const podeEditar = session?.user?.nivel ? ["SUPER_ADMIN","ADMIN","GERENTE"].includes(session.user.nivel) : false;
+  const isSuperAdmin = session?.user?.nivel === "SUPER_ADMIN";
 
-  const nivel = session?.user?.nivel || "";
-  const podeEditarOficina = nivel === "ADMIN" || nivel === "SUPER_ADMIN";
-  const podeEditarAddons = nivel === "SUPER_ADMIN";
+  const [oficina, setOficina] = useState<any>({});
+  const [cores, setCores] = useState({ corPrimaria: "#3b82f6", corSecundaria: "#1e40af" });
 
   useEffect(() => {
-    if (!session) return;
-    setPerfil({ nome: session.user.name || "", email: session.user.email || "", avatar: session.user.avatar || "" });
     fetch("/api/configuracoes")
       .then(r => r.json())
-      .then(d => { setOficina(d.oficina || {}); setAddons(d.addons || {}); })
-      .catch(() => {});
-  }, [session]);
+      .then(d => {
+        if (d.oficina) {
+          setOficina(d.oficina);
+          setCores({
+            corPrimaria: d.oficina.corPrimaria || "#3b82f6",
+            corSecundaria: d.oficina.corSecundaria || "#1e40af",
+          });
+        }
+      });
+  }, []);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (campo: string, valor: string) => {
+    if (!podeEditar) return;
+    setOficina((prev: any) => ({ ...prev, [campo]: valor }));
+  };
+
+  const handleCorChange = (campo: string, valor: string) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!podeEditar) return;
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
-    try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (res.ok) { const data = await res.json(); setPerfil(p => ({ ...p, avatar: data.url })); }
-    } catch (err) { console.error(err); }
-    finally { setUploading(false); }
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    const data = await res.json();
+    if (data.url) setOficina((prev: any) => ({ ...prev, logo: data.url }));
   };
 
-  const handleSavePerfil = async () => {
-    await fetch("/api/usuario/avatar", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nome: perfil.nome, avatar: perfil.avatar }) });
-    update(); alert("Perfil atualizado.");
+    setCores((prev: any) => ({ ...prev, [campo]: valor }));
+    document.documentElement.style.setProperty(`--color-${campo === "corPrimaria" ? "primary" : "secondary"}`, valor);
   };
 
-  const handleSaveOficina = async () => {
-    const res = await fetch("/api/configuracoes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ oficina }) });
-    if (res.ok) alert("Dados guardados."); else alert("Erro ao guardar.");
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!podeEditar) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    const data = await res.json();
+    if (data.url) setOficina((prev: any) => ({ ...prev, logo: data.url }));
   };
 
-  const handleSaveAddons = async () => {
-    const res = await fetch("/api/configuracoes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ addons }) });
-    if (res.ok) alert("Addons atualizados."); else alert("Erro ao guardar.");
+  const guardar = () => {
+    if (!podeEditar) return;
+    fetch("/api/configuracoes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ oficina: { ...oficina, ...cores } }),
+    }).then(() => alert("Configurações guardadas."));
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Configurações</h1>
-      <Tabs defaultValue="perfil">
-        <TabsList className="bg-gray-100 dark:bg-gray-800 flex flex-wrap">
-          <TabsTrigger value="perfil"><User className="h-4 w-4 mr-2" /> Meu Perfil</TabsTrigger>
-          <TabsTrigger value="oficina"><Store className="h-4 w-4 mr-2" /> Dados da Oficina</TabsTrigger>
-          <TabsTrigger value="fiscal"><Receipt className="h-4 w-4 mr-2" /> Faturação</TabsTrigger>
-          <TabsTrigger value="addons"><Smartphone className="h-4 w-4 mr-2" /> Módulos Adicionais</TabsTrigger>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Configurações</h1>
+      <Tabs defaultValue="geral" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="geral">Geral</TabsTrigger>
+          {isSuperAdmin && <TabsTrigger value="aparencia">Aparência</TabsTrigger>}
+          <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+          <TabsTrigger value="faturacao">Faturação</TabsTrigger>
+          <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
+          <TabsTrigger value="seguranca">Segurança</TabsTrigger>
+          <TabsTrigger value="addons">Módulos</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="perfil">
-          <Card><CardHeader><CardTitle>Meu Perfil</CardTitle></CardHeader><CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                {perfil.avatar ? (
-                  <img src={perfil.avatar.startsWith("/uploads") ? perfil.avatar : perfil.avatar} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-2 border-gray-300" />
-                ) : (
-                  <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">{session?.user?.name?.charAt(0) || "U"}</div>
-                )}
-                <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 bg-white dark:bg-gray-700 rounded-full p-1.5 shadow-lg border hover:bg-gray-100"><Camera className="h-4 w-4" /></button>
+        <TabsContent value="geral">
+          <Card className="glass">
+            <CardHeader><CardTitle>Dados da Oficina</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Input placeholder="Nome da oficina" value={oficina.nome || ""} onChange={e => handleChange("nome", e.target.value)} disabled={!podeEditar} className="bg-white dark:bg-gray-800" />
+                <Input placeholder="Email" value={oficina.email || ""} onChange={e => handleChange("email", e.target.value)} disabled={!podeEditar} className="bg-white dark:bg-gray-800" />
+                <Input placeholder="Morada" value={oficina.endereco || ""} onChange={e => handleChange("endereco", e.target.value)} disabled={!podeEditar} className="bg-white dark:bg-gray-800" />
+                <Input placeholder="Telefone" value={oficina.telefone || ""} onChange={e => handleChange("telefone", e.target.value)} disabled={!podeEditar} className="bg-white dark:bg-gray-800" />
+                <Input placeholder="Latitude" value={oficina.latitude || ""} onChange={e => handleChange("latitude", e.target.value)} disabled={!podeEditar} className="bg-white dark:bg-gray-800" />
+                <Input placeholder="Longitude" value={oficina.longitude || ""} onChange={e => handleChange("longitude", e.target.value)} disabled={!podeEditar} className="bg-white dark:bg-gray-800" />
+                <Input placeholder="Raio Permitido (m)" type="number" value={oficina.raioPermitido || ""} onChange={e => handleChange("raioPermitido", e.target.value)} disabled={!podeEditar} className="bg-white dark:bg-gray-800" />
+                <Input placeholder="Tipo de Oficina" value={oficina.tipoOficina || ""} onChange={e => handleChange("tipoOficina", e.target.value)} disabled={!podeEditar} className="bg-white dark:bg-gray-800" />
               </div>
-              <div><p className="font-medium">{perfil.nome}</p><p className="text-sm text-gray-500">{perfil.email}</p><Button variant="link" className="p-0 h-auto text-sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>{uploading ? "A enviar..." : "Alterar foto"}</Button></div>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
-            </div>
-            <div><Label>Nome</Label><Input className="bg-gray-100 dark:bg-gray-700" value={perfil.nome} onChange={e => setPerfil({...perfil, nome: e.target.value})} /></div>
-            <div><Label>Email</Label><Input className="bg-gray-100 dark:bg-gray-700" value={perfil.email} disabled /></div>
-            <Button onClick={handleSavePerfil} className="bg-blue-600">Guardar Perfil</Button>
-          </CardContent></Card>
+              <div className="flex items-center gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Logo da Oficina</label>
+                  <Input type="file" accept="image/*" onChange={handleLogoUpload} />
+                </div>
+                {oficina.logo && <img src={oficina.logo} alt="Logo" className="h-12 rounded" />}
+              </div>
+              {podeEditar && <Button onClick={guardar}>Guardar</Button>}
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="oficina">
-          <Card><CardHeader><CardTitle>Dados da Oficina</CardTitle></CardHeader><CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Nome</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.nome || ""} onChange={e => setOficina({...oficina, nome: e.target.value})} disabled={!podeEditarOficina} /></div>
-              <div><Label>Telefone</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.telefone || ""} onChange={e => setOficina({...oficina, telefone: e.target.value})} disabled={!podeEditarOficina} /></div>
-              <div><Label>Email</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.email || ""} onChange={e => setOficina({...oficina, email: e.target.value})} disabled={!podeEditarOficina} /></div>
-              <div><Label>Morada</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.endereco || ""} onChange={e => setOficina({...oficina, endereco: e.target.value})} disabled={!podeEditarOficina} /></div>
-            </div>
-            {podeEditarOficina && (
-              <>
-                <div className="border-t pt-4"><p className="font-semibold mb-2">🔗 Redes Sociais</p>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="flex items-center gap-2"><Facebook className="h-5 w-5 text-blue-600" /><Input className="bg-gray-100 dark:bg-gray-700" placeholder="Facebook" value={oficina.facebook || ""} onChange={e => setOficina({...oficina, facebook: e.target.value})} /></div>
-                    <div className="flex items-center gap-2"><Instagram className="h-5 w-5 text-pink-600" /><Input className="bg-gray-100 dark:bg-gray-700" placeholder="Instagram" value={oficina.instagram || ""} onChange={e => setOficina({...oficina, instagram: e.target.value})} /></div>
-                    <div className="flex items-center gap-2"><Music className="h-5 w-5" /><Input className="bg-gray-100 dark:bg-gray-700" placeholder="TikTok" value={oficina.tiktok || ""} onChange={e => setOficina({...oficina, tiktok: e.target.value})} /></div>
+        {isSuperAdmin && (
+          <TabsContent value="aparencia">
+            <Card className="glass">
+              <CardHeader><CardTitle>Personalizar Aparência</CardTitle></CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Cor Primária</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={cores.corPrimaria}
+                        onChange={e => handleCorChange("corPrimaria", e.target.value)}
+                        className="h-10 w-10 rounded border cursor-pointer"
+                      />
+                      <Input
+                        value={cores.corPrimaria}
+                        onChange={e => handleCorChange("corPrimaria", e.target.value)}
+                        className="flex-1 bg-white dark:bg-gray-800"
+                        disabled={!podeEditar}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Cor Secundária</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={cores.corSecundaria}
+                        onChange={e => handleCorChange("corSecundaria", e.target.value)}
+                        className="h-10 w-10 rounded border cursor-pointer"
+                      />
+                      <Input
+                        value={cores.corSecundaria}
+                        onChange={e => handleCorChange("corSecundaria", e.target.value)}
+                        className="flex-1 bg-white dark:bg-gray-800"
+                        disabled={!podeEditar}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="border-t pt-4"><p className="font-semibold mb-2">📍 Localização para Ponto</p>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div><Label>Latitude</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.latitude || ""} onChange={e => setOficina({...oficina, latitude: e.target.value})} /></div>
-                    <div><Label>Longitude</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.longitude || ""} onChange={e => setOficina({...oficina, longitude: e.target.value})} /></div>
-                    <div><Label>Raio (m)</Label><Input className="bg-gray-100 dark:bg-gray-700" type="number" value={oficina.raioPermitido || "100"} onChange={e => setOficina({...oficina, raioPermitido: e.target.value})} /></div>
-                  </div>
+                <div className="p-4 border rounded-lg text-white font-medium" style={{ backgroundColor: cores.corPrimaria }}>
+                  Pré-visualização: Cor Primária
                 </div>
-                <Button onClick={handleSaveOficina} className="bg-blue-600">Guardar</Button>
-              </>
-            )}
-          </CardContent></Card>
-        </TabsContent>
+                <div className="p-4 border rounded-lg text-white font-medium" style={{ backgroundColor: cores.corSecundaria }}>
+                  Pré-visualização: Cor Secundária
+                </div>
+                {podeEditar && <Button onClick={guardar} className="bg-blue-600">Salvar Aparência</Button>}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
-        <TabsContent value="fiscal">
-          <Card><CardHeader><CardTitle>Faturação Certificada (Moloni)</CardTitle></CardHeader><CardContent className="space-y-4">
-            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                ⚠️ Configure aqui as credenciais da API Moloni. Estas credenciais são obtidas em{' '}
-                <a href="https://www.moloni.pt/dev/criar-uma-conta/" target="_blank" className="underline font-semibold">Moloni Developers</a>.
-                Após ativar a API, terá acesso ao <strong>Developer ID</strong> e <strong>Client Secret</strong>.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Developer ID</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.moloniDevId || ""} onChange={e => setOficina({...oficina, moloniDevId: e.target.value})} disabled={!podeEditarOficina} placeholder="ID do Developer" /></div>
-              <div><Label>Client Secret</Label><Input className="bg-gray-100 dark:bg-gray-700" type="password" value={oficina.moloniSecret || ""} onChange={e => setOficina({...oficina, moloniSecret: e.target.value})} disabled={!podeEditarOficina} placeholder="Chave secreta" /></div>
-              <div><Label>Email da conta Moloni</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.moloniEmail || ""} onChange={e => setOficina({...oficina, moloniEmail: e.target.value})} disabled={!podeEditarOficina} placeholder="email@exemplo.com" /></div>
-              <div><Label>Password da conta Moloni</Label><Input className="bg-gray-100 dark:bg-gray-700" type="password" value={oficina.moloniPass || ""} onChange={e => setOficina({...oficina, moloniPass: e.target.value})} disabled={!podeEditarOficina} placeholder="Password" /></div>
-              <div><Label>ID da Empresa (Company ID)</Label><Input className="bg-gray-100 dark:bg-gray-700" value={oficina.moloniCompanyId || ""} onChange={e => setOficina({...oficina, moloniCompanyId: e.target.value})} disabled={!podeEditarOficina} placeholder="ID numérico" /></div>
-            </div>
-            {podeEditarOficina && <Button onClick={handleSaveOficina} className="bg-blue-600">Guardar Configurações Fiscais</Button>}
-          </CardContent></Card>
-        </TabsContent>
-
-        <TabsContent value="addons">
-          <Card><CardHeader><CardTitle>Módulos Adicionais</CardTitle></CardHeader><CardContent className="space-y-4">
-            {[
-              { key: "ponto", icon: Clock, color: "text-blue-500", label: "Ponto Eletrónico", desc: "Registo de entrada/saída" },
-              { key: "whatsapp", icon: MessageCircle, color: "text-green-500", label: "WhatsApp", desc: "Notificações via WhatsApp" },
-              { key: "sms", icon: Bell, color: "text-yellow-500", label: "SMS", desc: "Notificações via SMS" },
-              { key: "gps", icon: MapPin, color: "text-blue-500", label: "GPS Autotrack", desc: "Rastreamento em tempo real" },
-              { key: "pontos", icon: Star, color: "text-yellow-500", label: "Fidelidade", desc: "Recompensas para clientes" },
-              { key: "portal", icon: Globe, color: "text-purple-500", label: "Portal do Cliente", desc: "Acompanhamento de OS" }
-            ].map(a => (
-              <div key={a.key} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                <div className="flex items-center gap-3"><a.icon className={`h-6 w-6 ${a.color}`} /><div><p className="font-medium">{a.label}</p><p className="text-sm text-gray-500">{a.desc}</p></div></div>
-                <Switch checked={addons[a.key] || false} onCheckedChange={podeEditarAddons ? (v: boolean) => setAddons({...addons, [a.key]: v}) : undefined} disabled={!podeEditarAddons} className={!podeEditarAddons ? "opacity-50 cursor-not-allowed" : ""} />
-              </div>
-            ))}
-            {podeEditarAddons && <Button onClick={handleSaveAddons} className="bg-blue-600 mt-4">Guardar Configurações</Button>}
-          </CardContent></Card>
-        </TabsContent>
+        <TabsContent value="whatsapp"><Card className="glass"><CardContent className="p-6"><WhatsAppSection /></CardContent></Card></TabsContent>
+        <TabsContent value="faturacao"><Card className="glass"><CardContent className="p-6"><p className="text-gray-500">Configuração de faturação via Moloni.</p></CardContent></Card></TabsContent>
+        <TabsContent value="notificacoes"><Card className="glass"><CardContent className="p-6"><p className="text-gray-500">Gerir notificações.</p></CardContent></Card></TabsContent>
+        <TabsContent value="seguranca"><Card className="glass"><CardContent className="p-6"><p className="text-gray-500">Alterar password, 2FA.</p></CardContent></Card></TabsContent>
+        <TabsContent value="addons"><Card className="glass"><CardContent className="p-6"><p className="text-gray-500">Módulos adicionais.</p></CardContent></Card></TabsContent>
       </Tabs>
     </div>
   );

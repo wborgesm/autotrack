@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
   const veiculos = await prisma.veiculo.findMany({
     where,
     include: {
+      ordens: { select: { id: true, numero: true, status: true, createdAt: true } },
       cliente: { select: { nome: true } },
     },
     orderBy: { modelo: "asc" },
